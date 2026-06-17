@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title desc">
+  <title id="title">Ilustrasi filter dashboard</title>
+  <desc id="desc">Tiga slider kontrol berwarna biru.</desc>
+  <rect x="14" y="14" width="92" height="92" rx="24" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="3"/>
+  <path d="M31 39h58M31 60h58M31 81h58" stroke="#0B5ED7" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="50" cy="39" r="10" fill="#38BDF8" stroke="#fff" stroke-width="4"/>
+  <circle cx="75" cy="60" r="10" fill="#2563EB" stroke="#fff" stroke-width="4"/>
+  <circle cx="43" cy="81" r="10" fill="#108EE9" stroke="#fff" stroke-width="4"/>
+</svg>

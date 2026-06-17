@@ -1,0 +1,90 @@
+DANA INSIGHT COMMAND CENTER
+Developer: Muhammad Arsyad Arroyan
+Role: Dashboard Developer
+
+RINGKASAN DASHBOARD
+Dashboard Streamlit modern untuk menyajikan profil responden, hasil
+kuesioner, hasil web scraping ulasan DANA, filter interaktif, insight utama,
+audit data, dan kesimpulan penelitian.
+
+DATA YANG DIGUNAKAN
+1. data/survey_clean.xlsx - 50 responden anonim.
+2. data/ulasan_clean.xlsx - 330 ulasan anonim.
+3. data/hasil_kuesioner.csv - 20 indikator.
+4. File raw lokal hanya untuk rekonsiliasi dan tidak dipublikasi.
+5. Database hasil_analisis_dana.db dipakai hanya untuk validasi lokal.
+   Data mentahnya terduplikasi 2x dan direkonsiliasi menjadi 330 ulasan,
+   20 indikator, serta 9 kategori demografi unik.
+
+PROFIL RESPONDEN
+- Perempuan: 39 dari 50 (78.0%).
+- Laki-laki: 11 dari 50 (22.0%).
+- Mayoritas usia 18-22 tahun: 36 responden.
+- Frekuensi terbanyak Jarang: 21 responden.
+
+HASIL KUESIONER
+- 20 indikator.
+- Rata-rata keseluruhan: 4.002 atau 4.00.
+- 13 indikator Kuat/Baik.
+- 7 indikator Cukup.
+- 0 indikator Perlu Perhatian.
+- Tersedia Top 5, Bottom 5, chart Q1-Q20, dan daftar lengkap.
+
+ANALISIS VARIABEL
+- X1 Fleksibilitas.
+- X2 Praktis.
+- M Kepercayaan.
+- Y Keseluruhan.
+- Nilai dihitung langsung dari survey dan mengikuti filter aktif.
+- Mapping masih sementara dan harus disesuaikan jika ada instrumen resmi.
+
+HASIL WEB SCRAPING
+- Total 330 ulasan.
+- Rating rata-rata 3.89.
+- Positif 232 (70.3%).
+- Netral 13 (3.9%).
+- Negatif 85 (25.8%).
+- Tren utama dikelompokkan per tanggal.
+- Distribusi per jam tersedia sebagai analisis tambahan.
+
+FILTER INTERAKTIF
+- Gender, usia, frekuensi, dan tanggal survey.
+- Rating, sentimen, tanggal ulasan, pencarian kata, dan sorting.
+- Kategori serta mode tampilan indikator.
+- Limit tabel, mode presentasi, insight, dan animasi.
+- Apply Filter, Reset Semua, dan Refresh Data.
+
+FITUR UTAMA
+- Landing presentasi tampil pertama dan dapat membuka lima halaman secara langsung.
+- Hero total data.
+- KPI berbasis filter aktif menggunakan CSS grid yang responsif.
+- Pencarian cepat indikator dan ulasan tanpa mengubah KPI atau filter statistik.
+- Plotly memakai modebar minimal saat hover dan fullscreen custom pada header card.
+- Tabel memiliki pencarian, sorting, pagination, limit baris, dan ekspor CSV publik.
+- Filter chip dinamis yang hanya muncul ketika opsi dipilih benar-benar spesifik.
+- Filter rail biru desktop dan panel responsif mobile yang dapat ditutup.
+- Data Explorer dengan pencarian, sorting, audit metadata, dan download aman.
+- Empty state visual untuk hasil filter atau pencarian kosong.
+- Audit sumber data serta validasi invariant.
+- Aset PNG dan SVG lokal untuk logo, hero, lobby, mobile preview, insight, dan empty state.
+- Tab Lampiran Presentasi.
+
+INSIGHT UTAMA
+- Pengalaman pengguna dinilai baik dengan skor 4.00.
+- Sentimen positif mendominasi sebesar 70.3%.
+- Rating rata-rata adalah 3.89 dari 5.
+- Keluhan negatif yang terpantau mencakup akun, saldo, hilang, transaksi,
+  lag, premium, kecewa, upgrade, biaya, dan gagal.
+
+KESIMPULAN PENELITIAN
+Secara deskriptif, pengalaman pengguna DANA cenderung positif. Area yang
+memerlukan perhatian adalah eksplorasi fitur, kestabilan aplikasi, dan
+kepercayaan pada beberapa situasi transaksi. Dashboard tidak menyimpulkan
+hubungan kausal.
+
+OUTPUT AKHIR
+- Link GitHub: belum tersedia.
+- Link Streamlit Cloud: belum tersedia.
+- Screenshot dashboard: 10 tampilan harus diambil ulang setelah QA visual build final.
+- Source code dashboard: app.py.
+- Ringkasan fitur: file ini.

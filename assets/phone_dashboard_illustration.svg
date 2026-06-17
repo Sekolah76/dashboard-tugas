@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 320" role="img" aria-labelledby="title desc">
+  <title id="title">Ilustrasi dashboard dompet digital</title>
+  <desc id="desc">Ponsel dengan kartu saldo, grafik, dan elemen pembayaran berwarna biru.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E0F2FE"/>
+      <stop offset="1" stop-color="#DBEAFE"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#0B5ED7"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#0F3D75" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="420" height="320" rx="42" fill="url(#bg)"/>
+  <circle cx="72" cy="70" r="34" fill="#38BDF8" opacity=".16"/>
+  <circle cx="354" cy="238" r="52" fill="#2563EB" opacity=".10"/>
+  <path d="M36 234l48-48 34 34 52-62" fill="none" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" opacity=".35"/>
+  <g filter="url(#shadow)" transform="translate(164 18)">
+    <rect x="0" y="0" width="174" height="284" rx="34" fill="#0F172A"/>
+    <rect x="9" y="10" width="156" height="264" rx="27" fill="#F8FBFF"/>
+    <rect x="9" y="10" width="156" height="66" rx="27" fill="url(#blue)"/>
+    <rect x="62" y="17" width="52" height="7" rx="3.5" fill="#0F172A" opacity=".7"/>
+    <text x="26" y="48" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">DANA Insight</text>
+    <rect x="23" y="92" width="128" height="58" rx="15" fill="url(#blue)"/>
+    <text x="37" y="113" font-family="Arial, sans-serif" font-size="9" fill="#DBEAFE">RATING RATA-RATA</text>
+    <text x="37" y="137" font-family="Arial, sans-serif" font-size="25" font-weight="800" fill="#fff">3.89</text>
+    <circle cx="132" cy="121" r="12" fill="#fff" opacity=".22"/>
+    <path d="M132 112l2.5 5 5.5.8-4 3.8.9 5.4-4.9-2.6-4.9 2.6.9-5.4-4-3.8 5.5-.8z" fill="#fff"/>
+    <rect x="23" y="166" width="128" height="77" rx="15" fill="#fff" stroke="#DCE8F7"/>
+    <text x="36" y="187" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#64748B">ULASAN PER TANGGAL</text>
+    <rect x="38" y="205" width="24" height="25" rx="5" fill="#38BDF8"/>
+    <rect x="76" y="195" width="24" height="35" rx="5" fill="#108EE9"/>
+    <rect x="114" y="213" width="24" height="17" rx="5" fill="#2563EB"/>
+  </g>
+  <g filter="url(#shadow)" transform="translate(42 92) rotate(-5)">
+    <rect width="168" height="98" rx="22" fill="url(#blue)"/>
+    <rect x="18" y="18" width="44" height="28" rx="8" fill="#fff" opacity=".22"/>
+    <path d="M27 25h16c8 0 14 6 14 14H27z" fill="#fff"/>
+    <text x="20" y="72" font-family="Arial, sans-serif" font-size="15" font-weight="800" fill="#fff">DIGITAL WALLET</text>
+    <circle cx="142" cy="28" r="11" fill="#FBBF24"/>
+  </g>
+  <path d="M353 66l25 10v23c0 22-13 39-25 45-12-6-25-23-25-45V76z" fill="#2563EB" opacity=".92"/>
+  <path d="M342 103l8 8 15-19" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

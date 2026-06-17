@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title desc">
+  <title id="title">Ilustrasi ulasan pengguna</title>
+  <desc id="desc">Bubble ulasan dengan bintang rating.</desc>
+  <defs>
+    <linearGradient id="reviewGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <rect x="13" y="18" width="94" height="70" rx="22" fill="url(#reviewGradient)"/>
+  <path d="M36 85 24 105l31-17" fill="#2563EB"/>
+  <path d="m60 34 5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1 5-11Z" fill="#FDE68A"/>
+  <path d="M35 76h50" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".48"/>
+  <circle cx="96" cy="27" r="13" fill="#67E8F9" opacity=".65"/>
+</svg>

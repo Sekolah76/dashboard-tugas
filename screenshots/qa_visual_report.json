@@ -1,0 +1,20 @@
+{
+  "url": "http://localhost:8501",
+  "capturedAt": "2026-06-14T09:45:08.286Z",
+  "screenshots": [
+    "01_Lobby.png",
+    "02_Hero_KPI.png",
+    "03_Control_Panel.png",
+    "04_Overview.png",
+    "05_Analisis_Survei.png",
+    "06_Analisis_Ulasan.png",
+    "07_Data_Explorer.png",
+    "08_Kesimpulan.png",
+    "09_Lampiran_Presentasi.png",
+    "10_Mobile_View.png"
+  ],
+  "tabletCheck": "screenshots/tmp/tablet_qa.png",
+  "randomIconText": [],
+  "runtimeErrorEvents": 0,
+  "runtimeErrorDetails": []
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title desc">
+  <title id="title">Ilustrasi variabel penelitian</title>
+  <desc id="desc">Empat node X1 X2 M dan Y yang terhubung secara deskriptif.</desc>
+  <path d="M34 36h52M34 84h52M34 36v48M86 36v48" stroke="#93C5FD" stroke-width="4" stroke-dasharray="5 5"/>
+  <circle cx="34" cy="36" r="20" fill="#38BDF8"/>
+  <circle cx="86" cy="36" r="20" fill="#108EE9"/>
+  <circle cx="34" cy="84" r="20" fill="#F59E0B"/>
+  <circle cx="86" cy="84" r="20" fill="#10B981"/>
+  <g fill="#fff" font-family="Inter,Segoe UI,sans-serif" font-size="14" font-weight="800" text-anchor="middle">
+    <text x="34" y="41">X1</text>
+    <text x="86" y="41">X2</text>
+    <text x="34" y="89">M</text>
+    <text x="86" y="89">Y</text>
+  </g>
+</svg>
