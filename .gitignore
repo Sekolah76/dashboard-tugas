@@ -33,3 +33,8 @@ streamlit_error.txt
 Thumbs.db
 
 screenshots/tmp/
+
+node_modules/
+screenshots/
+.agent/
+.agents/
