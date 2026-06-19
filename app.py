@@ -7599,7 +7599,13 @@ def render_snapshot_flyer(
                         gender_col = survey_columns.get("gender")
                         if survey is not None and gender_col in survey.columns:
                             g_counts = survey[gender_col].value_counts()
-                            fig = donut_chart(g_counts, "Gender", {"Perempuan": C_PRIMARY, "Laki-laki": C_SKY}, "Total data", "responden")
+                            fig = donut_chart(
+                                counts=g_counts,
+                                title="Gender",
+                                color_map={"Perempuan": C_PRIMARY, "Laki-laki": C_SKY},
+                                scope_label="Total data",
+                                unit_label="responden",
+                            )
                             fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10), showlegend=False)
                             plot_chart(fig, "flyer_gender")
                             
@@ -7610,7 +7616,16 @@ def render_snapshot_flyer(
                             a_counts = survey[age_col].value_counts()
                             ordered_labels = sorted(a_counts.index.tolist(), key=age_sort_key)
                             ordered_values = [int(a_counts[label]) for label in ordered_labels]
-                            fig = bar_chart(ordered_labels, ordered_values, "Kelompok Usia", C_ELECTRIC, len(survey), "Total data", "responden")
+                            fig = bar_chart(
+                                labels=ordered_labels,
+                                values=ordered_values,
+                                title="Kelompok Usia",
+                                color=C_ELECTRIC,
+                                height=180,
+                                denominator=len(survey),
+                                scope_label="Total data",
+                                unit_label="responden",
+                            )
                             fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10))
                             plot_chart(fig, "flyer_age")
                             
@@ -7618,7 +7633,13 @@ def render_snapshot_flyer(
                     with st.container(key="flyer_chart_sentiment", border=True):
                         if reviews is not None and "sentimen" in reviews.columns:
                             s_counts = reviews["sentimen"].value_counts()
-                            fig = donut_chart(s_counts, "Sentimen", {"Positif": C_POSITIVE, "Netral": C_NEUTRAL, "Negatif": C_NEGATIVE}, "Total data", "ulasan")
+                            fig = donut_chart(
+                                counts=s_counts,
+                                title="Sentimen",
+                                color_map={"Positif": C_POSITIVE, "Netral": C_NEUTRAL, "Negatif": C_NEGATIVE},
+                                scope_label="Total data",
+                                unit_label="ulasan",
+                            )
                             fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10), showlegend=False)
                             plot_chart(fig, "flyer_sentiment")
                 
@@ -7630,7 +7651,16 @@ def render_snapshot_flyer(
                         if reviews is not None and rating_col in reviews.columns:
                             r_counts = reviews[rating_col].dropna().astype(int).value_counts().reindex([1, 2, 3, 4, 5], fill_value=0)
                             colors = [C_NEGATIVE, "#F87171", C_NEUTRAL, "#34D399", C_POSITIVE]
-                            fig = bar_chart([f"Rating {r}" for r in r_counts.index], r_counts.values.tolist(), "Sebaran Rating", colors, len(reviews), "Total data", "ulasan")
+                            fig = bar_chart(
+                                labels=[f"Rating {r}" for r in r_counts.index],
+                                values=r_counts.values.tolist(),
+                                title="Sebaran Rating",
+                                color=colors,
+                                height=180,
+                                denominator=len(reviews),
+                                scope_label="Total data",
+                                unit_label="ulasan",
+                            )
                             fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10))
                             plot_chart(fig, "flyer_rating")
                             
@@ -7638,7 +7668,10 @@ def render_snapshot_flyer(
                     with st.container(key="flyer_chart_variables", border=True):
                         if survey is not None:
                             vars_df, _ = compute_variable_scores(survey, survey_columns.get("questions", []))
-                            fig = variable_score_chart(vars_df, "Total data")
+                            fig = variable_score_chart(
+                                variables=vars_df,
+                                scope_label="Total data",
+                            )
                             fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10))
                             plot_chart(fig, "flyer_variables")
                             
