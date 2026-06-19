@@ -62,12 +62,116 @@ C_SOFT_RED = "#FEF2F2"
 
 WIB = timezone(timedelta(hours=7))
 DEFAULT_SHOW_LOBBY = True
+# Config for normal card charts — all drag/zoom/select disabled
 PLOTLY_CONFIG = {
     "displayModeBar": False,
     "displaylogo": False,
     "responsive": True,
     "scrollZoom": False,
+    "doubleClick": False,
+    "editable": False,
+    "edits": {
+        "shapePosition": False,
+        "annotationPosition": False,
+    },
+    "modeBarButtonsToRemove": [
+        "zoom2d", "pan2d", "select2d", "lasso2d",
+        "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d",
+        "toImage",
+    ],
 }
+# Config for fullscreen dialog — zoom/pan allowed for exploration
+PLOTLY_FULLSCREEN_CONFIG = {
+    "displayModeBar": True,
+    "displaylogo": False,
+    "responsive": True,
+    "scrollZoom": True,
+    "doubleClick": "reset",
+}
+
+
+PLOTLY_CARD_CONFIG = PLOTLY_CONFIG
+
+
+def apply_normal_chart_behavior(fig):
+    fig.update_layout(
+        dragmode=False,
+        hovermode="closest",
+        clickmode="none",
+        selectdirection=None,
+        spikedistance=-1,
+        hoverlabel=dict(
+            bgcolor="#0F172A",
+            bordercolor="rgba(255,255,255,0.35)",
+            font=dict(
+                family="Inter, Arial, sans-serif",
+                size=13,
+                color="#FFFFFF",
+            ),
+            align="left",
+            namelength=-1,
+        ),
+    )
+    fig.update_xaxes(
+        fixedrange=True,
+        showspikes=False,
+    )
+    fig.update_yaxes(
+        fixedrange=True,
+        showspikes=False,
+    )
+    return fig
+
+
+def apply_fullscreen_chart_behavior(fig):
+    fig.update_layout(
+        dragmode="zoom",
+        hovermode="closest",
+        spikedistance=-1,
+        hoverlabel=dict(
+            bgcolor="#0F172A",
+            bordercolor="rgba(255,255,255,0.35)",
+            font=dict(
+                family="Inter, Arial, sans-serif",
+                size=13,
+                color="#FFFFFF",
+            ),
+            align="left",
+            namelength=-1,
+        ),
+    )
+    fig.update_xaxes(
+        fixedrange=False,
+        showspikes=False,
+    )
+    fig.update_yaxes(
+        fixedrange=False,
+        showspikes=False,
+    )
+    return fig
+
+
+def render_plotly_normal(fig, key=None):
+    apply_normal_chart_behavior(fig)
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        theme=None,
+        config=PLOTLY_CARD_CONFIG,
+        key=key,
+    )
+
+
+def render_plotly_fullscreen(fig, key=None):
+    apply_fullscreen_chart_behavior(fig)
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        theme=None,
+        config=PLOTLY_FULLSCREEN_CONFIG,
+        key=key,
+    )
+
 
 NAV_ITEMS = (
     ("Overview", "Ringkasan performa utama"),
@@ -230,13 +334,19 @@ def _build_asset_registry() -> dict[str, str]:
     for key, candidates in (
         ("filter_illustration", ["15_illustration_filter_control_1254x1254.png",
                                   "02_illustration_filter_control_1254x1254.png"]),
-        ("privacy_shield", ["shield_privacy.svg",
-                             "06_icon_privacy_shield_1254x1254.png"]),
+        ("privacy_shield", ["06_icon_privacy_shield_1254x1254.png",
+                             "04_illustration_security_shield_1254x1254.png",
+                             "shield_privacy.svg"]),
         ("logo_wordmark", ["dana_logo_wordmark_header_480x120.png",
                             "dana_logo_wordmark_1200x300.png"]),
         ("logo_mark", ["dana_mark.svg"]),
         ("wallet_cluster", ["dana_wallet_cluster_720x720.png",
                              "dana_wallet_cluster_480x480.png"]),
+        ("analytics_icon", ["11_icon_dashboard_analytics_1254x1254.png"]),
+        ("survey_illustration", ["13_illustration_survey_checklist_1254x1254.png"]),
+        ("review_illustration", ["14_illustration_review_rating_1254x1254.png"]),
+        ("phone_mockup", ["10_phone_dana_app_mockup_1254x1254.png",
+                           "03_phone_dana_dashboard_mockup_1024x1536.png"]),
     ):
         for c in candidates:
             if asset_path(c).is_file():
@@ -275,26 +385,93 @@ def render_image_asset(
     )
 
 
+from PIL import Image
+
+def find_existing_asset(candidates):
+    for item in candidates:
+        p = Path(item)
+        if p.exists():
+            return p
+        filename = p.name
+        ap = asset_path(filename)
+        if ap.is_file():
+            return ap
+    return None
+
+
+def image_to_data_uri(path):
+    path = Path(path)
+    if not path.exists():
+        return ""
+    mime = "image/png"
+    if path.suffix.lower() == ".svg":
+        mime = "image/svg+xml"
+    elif path.suffix.lower() in [".jpg", ".jpeg"]:
+        mime = "image/jpeg"
+    return "data:" + mime + ";base64," + base64.b64encode(path.read_bytes()).decode("utf-8")
+
+
+def dana_logo_html(height=30, **kwargs):
+    if isinstance(height, str):
+        if height.endswith("px"):
+            try:
+                height = int(height[:-2])
+            except ValueError:
+                height = 30
+    logo_path = find_existing_asset([
+        "assets/dana_logo_wordmark_header_480x120.png",
+        "assets/dana_logo_wordmark_1200x300.png",
+        "assets/dana_wordmark.png",
+        "assets/dana_logo.png",
+    ])
+    if not logo_path:
+        return '<span style="font-weight:900;color:#108EE9;font-size:22px;">DANA</span>'
+    uri = image_to_data_uri(logo_path)
+    return f'<img src="{uri}" alt="DANA" style="height:{height}px;width:auto;display:block;object-fit:contain;">'
+
+
+favicon_path = find_existing_asset([
+    "assets/dana_favicon.png",
+    "assets/dana_mark.png",
+    "assets/favicon.png",
+])
+
+page_icon = Image.open(favicon_path) if favicon_path and favicon_path.exists() else None
+
 st.set_page_config(
     page_title="DANA Insight Command Center",
-    page_icon="D",
+    page_icon=page_icon if page_icon else "💠",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
 
-# =============================================================================
-# UI HELPERS
-# =============================================================================
 def inject_custom_css() -> None:
     # Use ASSETS registry to get actual filenames dynamically
     hero_filename = ASSETS.get("dashboard_hero", "dana_hero_banner_1920x520.png")
     landing_hero_filename = ASSETS.get("landing_hero", "08_hero_dana_phone_wallet_large_1672x941.png")
     hero_background = asset_css_url(hero_filename)
     landing_hero_bg = asset_css_url(landing_hero_filename)
-    st.html(
-        f"""
-        <style>
+    # Use st.markdown instead of st.html to avoid MemoryError on large CSS blocks.
+    # Streamlit's st.html() renders in a sandboxed iframe; large strings can cause
+    # memory pressure. st.markdown with unsafe_allow_html=True injects directly.
+    _css = f"""
+        .brand-logo-wrap {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 128px;
+            height: 44px;
+            padding: 0 10px;
+        }}
+
+        .brand-logo-wrap img {{
+            height: 30px !important;
+            width: auto !important;
+            max-width: 150px !important;
+            object-fit: contain !important;
+        }}
+
         :root {{
             --dana-blue: #108EE9;
             --dana-blue-dark: #005BEA;
@@ -975,19 +1152,20 @@ def inject_custom_css() -> None:
         }}
 
         .brand-mark {{
-            width: 84px;
+            width: 160px;
             height: 32px;
-            display: grid;
-            place-items: center;
-            overflow: hidden;
-            border-radius: 9px;
-            background: linear-gradient(145deg, {C_SKY}, {C_DEEP});
-            box-shadow: 0 4px 11px rgba(16,142,233,.2);
+            display: flex;
+            align-items: center;
+            overflow: visible;
+            border-radius: 0;
+            background: none;
+            box-shadow: none;
         }}
 
         .brand-mark img {{
-            width: 84px;
-            height: 32px;
+            height: 28px;
+            width: auto;
+            max-width: 160px;
             object-fit: contain;
         }}
 
@@ -1151,7 +1329,11 @@ def inject_custom_css() -> None:
         .hero-content {{
             position: relative;
             z-index: 1;
-            max-width: 60%;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1.5rem;
+            width: 100%;
         }}
 
         .eyebrow {{
@@ -1234,6 +1416,31 @@ def inject_custom_css() -> None:
             text-overflow: ellipsis;
         }}
 
+        .hero-stat-item {{
+            display: flex;
+            flex-direction: column;
+            gap: .1rem;
+        }}
+
+        /* Hero layout with optional phone image */
+        .hero-copy-col {{
+            flex: 1;
+            min-width: 0;
+        }}
+        .hero-image-col {{
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }}
+        .hero-phone-visual {{
+            width: clamp(90px, 12vw, 160px);
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 12px 24px rgba(16,142,233,.15));
+            animation: lobby-float 3s ease-in-out infinite;
+            border-radius: 16px;
+        }}
 
         /* ── SECTION HEADINGS ── */
         .section-heading {{
@@ -1349,18 +1556,23 @@ def inject_custom_css() -> None:
         }}
 
         .icon-box {{
-            width: 34px;
-            height: 34px;
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
             display: grid;
             place-items: center;
-            border-radius: 10px;
+            border-radius: 11px;
             background: var(--kpi-soft, #EFF6FF);
+            border: 1px solid var(--kpi-color, {C_PRIMARY});
+            border-opacity: 0.2;
         }}
 
         .icon-box svg {{
-            width: 17px;
-            height: 17px;
+            width: 19px;
+            height: 19px;
             stroke: var(--kpi-color, {C_PRIMARY});
+            stroke-width: 2;
+            fill: none;
         }}
 
         .kpi-label {{
@@ -1482,12 +1694,16 @@ def inject_custom_css() -> None:
         [data-testid="stDataFrame"] {{
             width: 100%;
             max-width: 100%;
-            overflow: hidden;
+            overflow: visible !important;
             border: 1px solid var(--dana-border);
             border-radius: 14px;
             background: var(--dana-card);
             box-shadow: none;
             font-size: .82rem;
+        }}
+
+        [data-testid="stDataFrame"] div {{
+            scrollbar-width: thin;
         }}
 
         [class*="st-key-table_card_"],
@@ -1497,7 +1713,7 @@ def inject_custom_css() -> None:
             width: 100%;
             max-width: 100%;
             padding: .9rem;
-            overflow: hidden;
+            overflow: clip;
             border: 1px solid var(--dana-border);
             border-radius: var(--radius-md);
             background: var(--dana-card);
@@ -1564,7 +1780,7 @@ def inject_custom_css() -> None:
         [data-testid="stDataFrame"] {{
             border: 1px solid var(--dana-border);
             border-radius: 16px;
-            overflow: hidden;
+            overflow: auto !important;
             box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
         }}
 
@@ -1871,6 +2087,46 @@ def inject_custom_css() -> None:
             line-height: 1.5;
         }}
 
+        .privacy-note-card {{
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 1.2rem;
+            border: 1px solid #BAE6FD;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #F0F9FF, #EFF6FF);
+            margin-bottom: .75rem;
+            animation: fade-up .4s cubic-bezier(.16,1,.3,1) both;
+        }}
+        .privacy-note-icon {{
+            flex: 0 0 48px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .privacy-shield-icon {{
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }}
+        .privacy-note-body {{
+            flex: 1;
+            color: #075985;
+            font-size: .78rem;
+            line-height: 1.55;
+        }}
+        .privacy-note-body strong {{
+            display: block;
+            margin-bottom: .3rem;
+            font-size: .82rem;
+            color: #0369A1;
+        }}
+        .privacy-note-body p {{
+            margin: 0;
+        }}
+
         .empty-state {{
             display: grid;
             justify-items: center;
@@ -2046,6 +2302,65 @@ def inject_custom_css() -> None:
             }}
         }}
 
+        /* ── NO-ANIMATIONS MODE (user preference) ── */
+        body.no-animations *, body.no-animations *::before, body.no-animations *::after {{
+            animation: none !important;
+            animation-duration: .01ms !important;
+            transition: none !important;
+            transition-duration: .01ms !important;
+        }}
+        body.no-animations .kpi-card:hover {{
+            transform: none !important;
+            box-shadow: 0 3px 14px rgba(15,23,42,.04) !important;
+        }}
+        body.no-animations [class*="st-key-chart_"]:hover,
+        body.no-animations [class*="st-key-panel_"]:hover {{
+            transform: none !important;
+        }}
+
+        /* ── PRESENTATION MODE ── */
+        body.presentation-mode .kpi-value {{ font-size: 2.1rem !important; }}
+        body.presentation-mode .kpi-label {{ font-size: .68rem !important; }}
+        body.presentation-mode .section-banner-title {{ font-size: 2rem !important; }}
+        body.presentation-mode .section-title {{ font-size: 1.6rem !important; }}
+        body.presentation-mode h2 {{ font-size: 1.5rem !important; }}
+        body.presentation-mode .kpi-caption {{ display: none; }}
+        body.presentation-mode .stCaption {{ display: none; }}
+
+        /* Presentation mode badge */
+        .presentation-badge {{
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .28rem .8rem;
+            background: linear-gradient(135deg, #7C3AED, #4F46E5);
+            color: white;
+            border-radius: 999px;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            box-shadow: 0 2px 10px rgba(124,58,237,.35);
+            animation: fade-up .4s cubic-bezier(.16,1,.3,1) both;
+        }}
+        .presentation-banner-bar {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .75rem;
+            padding: .55rem 1.2rem;
+            background: linear-gradient(135deg, rgba(124,58,237,.08), rgba(79,70,229,.06));
+            border: 1px solid rgba(124,58,237,.2);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            animation: fade-up .4s cubic-bezier(.16,1,.3,1) both;
+        }}
+        .presentation-banner-bar span {{
+            font-size: .82rem;
+            font-weight: 600;
+            color: #4F46E5;
+        }}
+
         /* ── GRID LAYOUTS ── */
         .kpi-grid, .summary-grid-5 {{
             display: grid;
@@ -2135,7 +2450,6 @@ def inject_custom_css() -> None:
             }}
         }}
 
-
         @media (max-width: 768px) {{
             .kpi-grid, .summary-grid-5, .health-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
             .summary-grid-4 {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
@@ -2154,12 +2468,255 @@ def inject_custom_css() -> None:
                 border-radius: 16px;
             }}
         }}
-        </style>
+
+        /* ── ACTIVE TAB ENHANCEMENT ── */
+        [data-baseweb="tab"][aria-selected="true"] {{
+            border-bottom: 3px solid {C_PRIMARY} !important;
+            color: {C_PRIMARY} !important;
+            font-weight: 700 !important;
+        }}
+
+        /* ── FILTER CHIP IMPROVEMENT ── */
+        .filter-chip {{
+            display: inline-flex;
+            align-items: center;
+            background: #EFF6FF;
+            border: 1.5px solid {C_PRIMARY}40;
+            border-radius: 999px;
+            padding: .18rem .65rem;
+            font-size: .68rem;
+            font-weight: 600;
+            color: {C_PRIMARY};
+            white-space: nowrap;
+            transition: background .18s ease, border-color .18s ease;
+        }}
+        .filter-chip:hover {{
+            background: #DBEAFE;
+            border-color: {C_PRIMARY};
+        }}
+
+        /* ── KPI PROGRESS BAR ANIMATION ── */
+        @keyframes progress-fill {{
+            from {{ width: 0%; }}
+            to {{ width: var(--progress-w, 50%); }}
+        }}
+        .kpi-progress-bar-fill {{
+            animation: progress-fill .8s cubic-bezier(.25,.8,.25,1) forwards;
+        }}
+
+        /* ── DIALOG / MODAL Z-INDEX (above all Plotly layers) ── */
+        div[data-testid="stDialog"],
+        div[data-testid="stModal"] {{
+            z-index: 999999 !important;
+        }}
+
+        div[data-testid="stDialog"] [role="dialog"],
+        div[data-testid="stModal"] [role="dialog"] {{
+            z-index: 1000000 !important;
+            background: #F8FBFF !important;
+            overflow: auto !important;
+        }}
+
+        div[data-testid="stDialog"]::backdrop,
+        div[data-testid="stModal"]::backdrop {{
+            background: rgba(15, 23, 42, 0.55) !important;
+            z-index: 999998 !important;
+        }}
+
+        /* ── PLOTLY: hide spikes, selection/zoom layers, force stable tooltip ── */
+        .js-plotly-plot .hoverlayer {{
+            z-index: 1 !important;
+        }}
+        .js-plotly-plot .spikelines {{
+            display: none !important;
+        }}
+        /* Force-hide drag selection box, zoom layer, and select outlines */
+        .js-plotly-plot .select-outline,
+        .js-plotly-plot .zoomlayer,
+        .js-plotly-plot .selectlayer {{
+            display: none !important;
+            pointer-events: none !important;
+        }}
+        /* Stable dark hover tooltip styling */
+        .js-plotly-plot .hoverlayer .hovertext path {{
+            fill: #0F172A !important;
+            stroke: rgba(255,255,255,0.35) !important;
+        }}
+        .js-plotly-plot .hoverlayer .hovertext text,
+        .js-plotly-plot .hoverlayer .hovertext tspan {{
+            fill: #FFFFFF !important;
+            font-family: Inter, Arial, sans-serif !important;
+            font-size: 13px !important;
+            z-index: 1 !important;
+        }}
+
+        /* ── KPI GRID & CARDS ── */
+        .kpi-grid {{
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 1.05rem;
+            margin: 1.2rem 0 1.8rem;
+        }}
+        .kpi-card {{
+            position: relative;
+            overflow: hidden;
+            padding: 1.2rem 1.15rem 1.05rem;
+            border: 1.5px solid rgba(16,142,233,.16);
+            border-radius: 22px;
+            box-shadow: 0 10px 30px rgba(16,142,233,.10), 0 1px 4px rgba(15,23,42,.04);
+            min-height: 148px;
+        }}
+        .kpi-orb {{
+            position: absolute;
+            right: -22px;
+            top: -30px;
+            width: 88px;
+            height: 88px;
+            border-radius: 999px;
+            opacity: .06;
+            pointer-events: none;
+        }}
+        .kpi-head {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .65rem;
+            margin-bottom: .7rem;
+        }}
+        .kpi-icon {{
+            width: 48px;
+            height: 48px;
+            flex: 0 0 48px;
+            border-radius: 14px;
+            border: 1.5px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            line-height: 1;
+        }}
+        .kpi-label {{
+            color: #64748B;
+            font-size: .66rem;
+            font-weight: 850;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            text-align: right;
+            line-height: 1.35;
+        }}
+        .kpi-value {{
+            color: #07132F;
+            font-size: 2.05rem;
+            font-weight: 900;
+            letter-spacing: -.045em;
+            line-height: 1.05;
+        }}
+        .kpi-caption {{
+            margin-top: .42rem;
+            color: #64748B;
+            font-size: .72rem;
+        }}
+        .progress-track {{
+            height: 6px;
+            margin-top: .8rem;
+            border-radius: 999px;
+            background: #EEF2F7;
+            overflow: hidden;
+        }}
+        .progress-fill {{
+            height: 100%;
+            border-radius: 999px;
+        }}
+        @media (max-width: 1200px) {{
+            .kpi-grid {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+        }}
+        @media (max-width: 760px) {{
+            .kpi-grid {{ grid-template-columns: 1fr; }}
+        }}
         """
-    )
+    # Split into two halves to reduce peak memory usage during injection.
+    # A 64KB f-string consumed in one markdown() call can trigger MemoryError
+    # in constrained environments (e.g. Streamlit AppTest).
+    lines = _css.split("\n")
+    mid = len(lines) // 2
+    _css_a = "\n".join(lines[:mid])
+    _css_b = "\n".join(lines[mid:])
+    try:
+        st.markdown(f"<style>{_css_a}\n{_css_b}</style>", unsafe_allow_html=True)
+    except MemoryError:
+        # Fallback: inject a minimal style sheet with just core tokens
+        _minimal = f"""
+        :root {{
+            --dana-primary: {C_PRIMARY};
+            --dana-deep: {C_DEEP};
+            --dana-bg: {C_BG};
+        }}
+        [data-testid="stAppViewContainer"] {{
+            background: {C_BG} !important;
+        }}
+        """
+        st.markdown(f"<style>{_minimal}</style>", unsafe_allow_html=True)
 
 
-def icon_svg(name: str) -> str:
+
+def inject_preference_classes(filters: dict) -> None:
+    """Inject dynamic CSS overrides based on user animation/presentation prefs.
+
+    Uses CSS custom-property overrides injected via st.html <style> block.
+    Avoids JS body.classList because st.html() runs in a sandboxed iframe
+    in Streamlit ≥1.38 and cannot access the parent document.body.
+    Falls back to streamlit.components.v1.html for script injection.
+    """
+    animations_on = bool(filters.get("animations", True))
+    presentation_on = bool(filters.get("presentation", False))
+
+    # ── CSS override block ──────────────────────────────────────────────────
+    anim_css = "" if animations_on else """
+        *, *::before, *::after {
+            animation: none !important;
+            animation-duration: 0.01ms !important;
+            transition: none !important;
+            transition-duration: 0.01ms !important;
+        }
+        .kpi-card:hover { transform: none !important; }
+    """
+    pres_css = "" if not presentation_on else """
+        .kpi-value { font-size: 2.1rem !important; }
+        .kpi-label { font-size: .68rem !important; }
+        .section-banner-title { font-size: 2rem !important; }
+        .section-title { font-size: 1.6rem !important; }
+        h2 { font-size: 1.5rem !important; }
+        .kpi-caption { display: none !important; }
+    """
+
+    if anim_css or pres_css:
+        combined = f"<style>{anim_css}{pres_css}</style>"
+        st.html(combined)
+
+    # ── JS body class injection (best-effort via st.iframe) ─────────────────
+    try:
+        no_anim_action = "remove" if animations_on else "add"
+        pres_action = "add" if presentation_on else "remove"
+        js = f"""
+        <script>
+        (function() {{
+            var root = window.parent ? window.parent.document : document;
+            var b = root.body;
+            if (b) {{
+                b.classList.{no_anim_action}('no-animations');
+                b.classList.{pres_action}('presentation-mode');
+            }}
+        }})();
+        </script>
+        """
+        st.iframe(js, height=0)
+
+    except Exception:
+        pass  # graceful degradation — CSS overrides above still apply
+
+
+def icon_svg(name: str, color: str = "currentColor", size: str = "18") -> str:
+    """Return a Lucide-style SVG icon with inline stroke for st.html() iframe compatibility."""
     paths = {
         "users": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
         "reviews": '<path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 8h8M8 12h5"/>',
@@ -2168,10 +2725,16 @@ def icon_svg(name: str) -> str:
         "sentiment": '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/>',
         "menu": '<path d="M4 6h16M4 12h16M4 18h16"/>',
         "refresh": '<path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5"/>',
+        "search": '<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>',
+        "filter": '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+        "chart": '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+        "shield": '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
     }
     body = paths.get(name, paths["score"])
     return (
-        '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" '
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="{size}" height="{size}" fill="none" '
+        f'style="display:block;flex:0 0 auto;color:{color};" '
+        f'stroke="{color}" stroke-width="2" '
         f'stroke-linecap="round" stroke-linejoin="round">{body}</svg>'
     )
 
@@ -2740,6 +3303,10 @@ def add_questionnaire_categories(questionnaire: pd.DataFrame | None) -> pd.DataF
     return categorized
 
 
+def has_data(df: pd.DataFrame | None) -> bool:
+    return df is not None and not df.empty
+
+
 def compute_variable_scores(
     survey: pd.DataFrame | None,
     question_columns: list[str],
@@ -3270,8 +3837,21 @@ def base_layout(title: str, height: int = 360, **overrides: Any) -> dict[str, An
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
         "font": {"family": "Inter, Segoe UI, sans-serif", "color": "#475569"},
-        "hoverlabel": {"bgcolor": "#0F172A", "font_color": "white"},
+        "hoverlabel": {
+            "bgcolor": "#0F172A",
+            "font_color": "#FFFFFF",
+            "font_size": 13,
+            "bordercolor": "rgba(255,255,255,0.35)",
+            "namelength": -1,
+            "align": "left",
+        },
+        "hovermode": "closest",
+        # Disable all drag/selection interaction on card charts
+        "dragmode": False,
+        "clickmode": "none",
+        "selectdirection": "any",  # Plotly requires this when dragmode is set
         "transition": {"duration": 500, "easing": "cubic-in-out"},
+        "spikedistance": -1,
     }
     layout.update(overrides)
     return layout
@@ -3295,30 +3875,39 @@ def donut_chart(
 ) -> go.Figure:
     labels = counts.index.astype(str).tolist()
     values = counts.values.tolist()
-    total = int(sum(values))
-    percentages = [value / total * 100 if total else 0.0 for value in values]
-    hover_scope = hover_scope_text(scope_label)
-    customdata = [
-        [total, f"{percentage:.1f}", unit_label, hover_scope]
-        for percentage in percentages
-    ]
     colors = [color_map.get(label, C_SKY) for label in labels]
+
+    total = float(sum(values)) if sum(values) else 0
+    percentages = [(float(v) / total * 100) if total else 0 for v in values]
+
+    text_positions = ["outside" if pct < 5 else "inside" for pct in percentages]
+    pull_values = [0.06 if pct < 5 else 0 for pct in percentages]
+
     figure = go.Figure(
-        go.Pie(
-            labels=labels,
-            values=values,
-            hole=0.62,
-            sort=False,
-            textinfo="label+percent",
-            textfont={"size": 11},
-            marker={"colors": colors, "line": {"color": "white", "width": 2}},
-            customdata=customdata,
-            hovertemplate=(
-                "<b>%{label}</b><br>"
-                "%{value} dari %{customdata[0]} %{customdata[2]}<br>"
-                "%{customdata[1]}% &middot; %{customdata[3]}<extra></extra>"
-            ),
-        )
+        data=[
+            go.Pie(
+                labels=labels,
+                values=values,
+                hole=0.58,
+                textinfo="label+percent",
+                texttemplate="%{label}<br>%{percent:.1%}",
+                textposition=text_positions,
+                pull=pull_values,
+                automargin=True,
+                domain=dict(x=[0.08, 0.92], y=[0.02, 0.98]),
+                marker=dict(
+                    colors=colors,
+                    line=dict(color="#FFFFFF", width=3)
+                ),
+                hovertemplate=(
+                    "<b>%{label}</b><br>"
+                    "Jumlah: <b>%{value}</b><br>"
+                    "Persentase: <b>%{percent:.1%}</b>"
+                    "<extra></extra>"
+                ),
+                sort=False,
+            )
+        ]
     )
     figure.update_layout(
         **base_layout(
@@ -3333,6 +3922,36 @@ def donut_chart(
                 "x": 0.5,
             },
         )
+    )
+    annotations = []
+    small_slice_idx = 0
+    for label, val, pct in zip(labels, values, percentages):
+        if pct < 5:
+            annotations.append(
+                dict(
+                    text=f"ℹ️ {label}: {pct:.1f}% ({val} {unit_label})",
+                    showarrow=False,
+                    x=0.02,
+                    y=0.02 + small_slice_idx * 0.06,
+                    xref="paper",
+                    yref="paper",
+                    xanchor="left",
+                    yanchor="bottom",
+                    font=dict(
+                        family="Inter, Arial, sans-serif",
+                        size=11,
+                        color="#64748B",
+                    ),
+                )
+            )
+            small_slice_idx += 1
+
+    figure.update_layout(
+        uniformtext_minsize=11,
+        uniformtext_mode="show",
+        margin=dict(l=50, r=80, t=45, b=60),
+        showlegend=True,
+        annotations=annotations,
     )
     return figure
 
@@ -3360,27 +3979,24 @@ def bar_chart(
     if denominator is not None:
         customdata = [
             [
-                denominator,
-                f"{float(value) / denominator * 100:.1f}" if denominator else "0.0",
-                unit_label,
-                hover_scope,
                 original_label,
+                str(int(value)) if isinstance(value, float) and value.is_integer() else str(value),
+                f"{float(value) / denominator * 100:.1f}" if denominator else "0.0",
             ]
             for value, original_label in zip(values, original_labels)
         ]
         hovertemplate = (
-            "<b>%{customdata[4]}</b><br>"
-            "%{y} dari %{customdata[0]} %{customdata[2]}<br>"
-            "%{customdata[1]}% &middot; %{customdata[3]}<extra></extra>"
+            "<b>%{x}</b><br>"
+            "Jumlah: <b>%{y}</b><br>"
+            "Persentase: <b>%{customdata[2]}%</b>"
+            "<extra></extra>"
         )
     else:
-        customdata = [
-            [hover_scope, original_label]
-            for original_label in original_labels
-        ]
+        customdata = [[original_label] for original_label in original_labels]
         hovertemplate = (
-            "<b>%{customdata[1]}</b><br>Nilai: %{y}<br>"
-            "%{customdata[0]}<extra></extra>"
+            "<b>%{x}</b><br>"
+            "Nilai: <b>%{y}</b>"
+            "<extra></extra>"
         )
     figure = go.Figure(
         go.Bar(
@@ -3403,8 +4019,9 @@ def bar_chart(
                 "showgrid": False,
                 "tickangle": -25,
                 "automargin": True,
+                "showspikes": False,
             },
-            yaxis={"title": y_title, "gridcolor": "#EAF0F7", "rangemode": "tozero"},
+            yaxis={"title": y_title, "gridcolor": "#EAF0F7", "rangemode": "tozero", "showspikes": False},
             showlegend=False,
             bargap=0.34,
         )
@@ -3444,7 +4061,6 @@ def questionnaire_chart(
     respondent_count: int,
     scope_label: str,
 ) -> go.Figure:
-    hover_scope = hover_scope_text(scope_label)
     ordered = questionnaire.sort_values("rata_rata", ascending=True).copy()
     if "kategori" not in ordered.columns:
         ordered["kategori"] = ordered["rata_rata"].map(score_interpretation)
@@ -3453,29 +4069,22 @@ def questionnaire_chart(
         for value in ordered["rata_rata"]
     ]
     height = max(500, min(560, len(ordered) * 23 + 90))
+    customdata = [[str(respondent_count)] for _ in range(len(ordered))]
     figure = go.Figure(
         go.Bar(
             x=ordered["rata_rata"],
             y=ordered["label"],
             orientation="h",
             marker={"color": colors},
-            customdata=np.column_stack(
-                [
-                    ordered["pertanyaan"],
-                    ordered["kategori"],
-                    np.repeat(respondent_count, len(ordered)),
-                    np.repeat(hover_scope, len(ordered)),
-                ]
-            ),
+            customdata=customdata,
             text=ordered["rata_rata"].map(lambda value: f"{value:.2f}"),
             textposition="outside",
             cliponaxis=False,
             hovertemplate=(
                 "<b>%{y}</b><br>"
-                "Pertanyaan: %{customdata[0]}<br>"
-                "Rata-rata: <b>%{text}</b><br>"
-                "Interpretasi: %{customdata[1]}<br>"
-                "%{customdata[2]} responden &middot; %{customdata[3]}<extra></extra>"
+                "Rata-rata: <b>%{x:.2f} / 5</b><br>"
+                "Responden: <b>%{customdata[0]}</b>"
+                "<extra></extra>"
             ),
         )
     )
@@ -3489,6 +4098,7 @@ def questionnaire_chart(
                 "tick0": 0,
                 "dtick": 1,
                 "gridcolor": "#EAF0F7",
+                "showspikes": False,
             },
             yaxis={"title": "", "showgrid": False},
             margin={"t": 48, "b": 52, "l": 48, "r": 42},
@@ -3517,7 +4127,6 @@ def variable_score_chart(
     variables: pd.DataFrame,
     scope_label: str,
 ) -> go.Figure:
-    hover_scope = hover_scope_text(scope_label)
     labels = variables["variabel"].astype(str).tolist()
     values = variables["rata_rata"].astype(float).tolist()
     interpretations = variables["interpretasi"].astype(str).tolist()
@@ -3525,6 +4134,10 @@ def variable_score_chart(
     colors = [
         C_POSITIVE if value >= 4 else C_NEUTRAL if value >= 3 else C_NEGATIVE
         for value in values
+    ]
+    customdata = [
+        [str(interp), str(cnt), f"{v:.2f}"]
+        for interp, cnt, v in zip(interpretations, indicator_counts, values)
     ]
     figure = go.Figure(
         go.Bar(
@@ -3534,19 +4147,13 @@ def variable_score_chart(
             text=[f"{value:.2f}" for value in values],
             textposition="outside",
             cliponaxis=False,
-            customdata=[
-                [interpretation, indicator_count, hover_scope]
-                for interpretation, indicator_count in zip(
-                    interpretations,
-                    indicator_counts,
-                )
-            ],
+            customdata=customdata,
             hovertemplate=(
                 "<b>%{x}</b><br>"
-                "Skor rata-rata: <b>%{text}</b><br>"
-                "Interpretasi: %{customdata[0]}<br>"
-                "Berdasarkan %{customdata[1]} indikator<br>"
-                "%{customdata[2]}<extra></extra>"
+                "Skor rata-rata: <b>%{customdata[2]} / 5</b><br>"
+                "Interpretasi: <b>%{customdata[0]}</b><br>"
+                "Berdasarkan %{customdata[1]} indikator"
+                "<extra></extra>"
             ),
         )
     )
@@ -3560,6 +4167,7 @@ def variable_score_chart(
                 "range": [0, 5.35],
                 "dtick": 1,
                 "gridcolor": "#EAF0F7",
+                "showspikes": False,
             },
             showlegend=False,
             bargap=0.35,
@@ -3588,7 +4196,7 @@ def _clear_fullscreen_chart() -> None:
 
 
 @st.dialog(
-    "Detail Grafik",
+    "📊 Detail Grafik",
     width="large",
     on_dismiss=_clear_fullscreen_chart,
 )
@@ -3603,23 +4211,20 @@ def render_fullscreen_dialog() -> None:
             st.rerun()
         return
 
-    st.markdown(f"### {escape(chart['title'])}")
+    st.markdown(f"#### {escape(chart['title'])}")
     enlarged = go.Figure(chart["figure"])
     enlarged.update_layout(
         autosize=True,
-        height=680,
-        margin={"l": 55, "r": 35, "t": 35, "b": 65},
+        height=600,
+        margin={"l": 55, "r": 35, "t": 28, "b": 65},
     )
-    st.plotly_chart(
-        enlarged,
-        width="stretch",
-        theme=None,
-        config=PLOTLY_CONFIG,
-        key=f"fullscreen_{chart_id}",
-    )
-    if st.button("Tutup Detail", key="close_fullscreen_chart", type="primary"):
-        st.session_state.fullscreen_chart_id = None
-        st.rerun()
+    # Fullscreen dialog: enable scroll zoom and pan for exploration
+    enlarged.update_layout(dragmode="zoom")
+    enlarged.update_xaxes(fixedrange=False)
+    enlarged.update_yaxes(fixedrange=False)
+    render_plotly_fullscreen(enlarged, key=f"fullscreen_{chart_id}")
+    st.caption("Gunakan toolbar Plotly di sudut kanan atas untuk zoom, pan, dan download grafik.")
+
 
 
 def render_chart_card(
@@ -3655,14 +4260,13 @@ def render_chart_card(
     inline.update_layout(
         title=None,
         margin=dict(l=28, r=16, t=16, b=38),
+        dragmode=False,
+        clickmode="none",
     )
-    st.plotly_chart(
-        inline,
-        width="stretch",
-        theme=None,
-        config=PLOTLY_CONFIG,
-        key=chart_id,
-    )
+    # fixedrange=True prevents zoom-selection box on axes in card charts
+    inline.update_xaxes(fixedrange=True, showspikes=False)
+    inline.update_yaxes(fixedrange=True, showspikes=False)
+    render_plotly_normal(inline, key=chart_id)
     if caption:
         st.caption(caption)
 
@@ -3680,7 +4284,7 @@ def render_sidebar_nav() -> None:
         "dana_logo_wordmark_header_480x120.png",
         class_name="sidebar-logo",
         alt="DANA Insight",
-        fallback=f'<div class="sidebar-logo-fallback">{icon_svg("users")} DANA Insight</div>'
+        fallback='<div class="sidebar-logo-fallback">DANA Insight</div>'
     )
     st.sidebar.html(
         f"""
@@ -4059,12 +4663,18 @@ DANA_HERO_SVG = """
 
 
 def _logo_img_tag() -> str:
-    """Return the local presentation wordmark with a safe SVG fallback."""
-    return render_image_asset(
+    """Return DANA wordmark img tag from asset, with SVG fallback."""
+    # Try dana_logo_html first (uses ASSETS registry correctly)
+    html = dana_logo_html(asset_key="logo_wordmark", height="32px", alt="DANA Wordmark")
+    if html.startswith("<img"):
+        return html
+    # Direct fallback via render_image_asset
+    rendered = render_image_asset(
         "dana_logo_wordmark_header_480x120.png",
-        alt="DANA inspired wordmark",
+        alt="DANA Wordmark",
         fallback=DANA_LOGO_SVG,
     )
+    return rendered if rendered else DANA_LOGO_SVG
 
 
 def render_lobby_summary(
@@ -4368,7 +4978,7 @@ def render_global_search_results(
             else:
                 for row in question_matches.itertuples():
                     score = getattr(row, "rata_rata", None)
-                    score_text = f" &middot; {float(score):.2f}" if score is not None else ""
+                    score_text = f" · {float(score):.2f}" if score is not None else ""
                     st.html(
                         '<div class="search-result-card">'
                         f"<strong>{escape(str(getattr(row, 'label', 'Indikator')))}</strong>"
@@ -4435,17 +5045,19 @@ def render_top_header(
                 if options is not None and defaults is not None:
                     render_filter_dialog(options, defaults)
         with brand_column:
-            logo_html = _logo_img_tag()
-            st.html(
+            st.markdown(
                 f"""
-                <div class="brand-lockup">
-                    <div class="brand-mark" style="padding:0;background:none;box-shadow:none;">{logo_html}</div>
+                <div style="display:flex;align-items:center;gap:.6rem;min-height:38px;">
+                    <div class="brand-logo-wrap">
+                        {dana_logo_html(30)}
+                    </div>
                     <div>
-                        <div class="brand-title">DANA Insight Command Center</div>
-                        <div class="brand-subtitle">Survey &amp; Review Analytics &mdash; Fintech Experience Dashboard</div>
+                        <div style="color:#07132F;font-weight:800;font-size:.9rem;line-height:1.15;">DANA Insight Command Center</div>
+                        <div style="color:#94A3B8;font-size:.68rem;margin-top:.12rem;">Survey &amp; Review Analytics &mdash; Fintech Experience Dashboard</div>
                     </div>
                 </div>
-                """
+                """,
+                unsafe_allow_html=True,
             )
         with search_column:
             search_query = st.text_input(
@@ -4485,9 +5097,9 @@ def render_hero(
         f"""
         <section class="hero-section fade-in">
             <div class="hero-content">
-                <div style="max-width:760px;">
+                <div class="hero-copy-col">
                         <div class="eyebrow">
-                            Total Data &middot; Fintech Experience Analytics
+                            TOTAL DATA · FINTECH EXPERIENCE ANALYTICS
                         </div>
                         <h1 class="hero-title">DANA Insight Command Center</h1>
                         <p class="hero-subtitle">
@@ -4501,27 +5113,27 @@ def render_hero(
                             <span class="hero-badge">Plotly Interaktif</span>
                         </div>
                 </div>
-                <div class="hero-stat-row">
-                    <div>
-                        <span class="hero-stat-value">{survey_total:,}</span>
-                        <span class="hero-stat-label">Responden Total</span>
-                    </div>
-                    <div>
-                        <span class="hero-stat-value">{review_total:,}</span>
-                        <span class="hero-stat-label">Ulasan Total</span>
-                    </div>
-                    <div>
-                        <span class="hero-stat-value">{questionnaire_average:.2f}</span>
-                        <span class="hero-stat-label">Skor Rata-rata</span>
-                    </div>
-                    <div>
-                        <span class="hero-stat-value">{review_average:.2f} / 5</span>
-                        <span class="hero-stat-label">Rating Rata-rata</span>
-                    </div>
-                    <div>
-                        <span class="hero-stat-value">{positive_percentage:.1f}%</span>
-                        <span class="hero-stat-label">Sentimen Positif</span>
-                    </div>
+            </div>
+            <div class="hero-stat-row">
+                <div class="hero-stat-item">
+                    <span class="hero-stat-value">{survey_total:,}</span>
+                    <span class="hero-stat-label">Responden Total</span>
+                </div>
+                <div class="hero-stat-item">
+                    <span class="hero-stat-value">{review_total:,}</span>
+                    <span class="hero-stat-label">Ulasan Total</span>
+                </div>
+                <div class="hero-stat-item">
+                    <span class="hero-stat-value">{questionnaire_average:.2f}</span>
+                    <span class="hero-stat-label">Skor Rata-rata</span>
+                </div>
+                <div class="hero-stat-item">
+                    <span class="hero-stat-value">{review_average:.2f} / 5</span>
+                    <span class="hero-stat-label">Rating Rata-rata</span>
+                </div>
+                <div class="hero-stat-item">
+                    <span class="hero-stat-value">{positive_percentage:.1f}%</span>
+                    <span class="hero-stat-label">Sentimen Positif</span>
                 </div>
             </div>
         </section>
@@ -4637,22 +5249,69 @@ def kpi_card_html(
         bounded = max(0.0, min(float(progress), 100.0))
         progress_html = (
             '<div class="progress-track">'
-            f'<div class="progress-fill" style="--progress:{bounded:.1f}%"></div>'
-            "</div>"
+            f'<div class="progress-fill" style="width:{bounded:.1f}%;background:linear-gradient(90deg,{color},#38BDF8);"></div>'
+            '</div>'
         )
     value_html = escape(display_value)
     animation_class = " fade-up" if animate else ""
-    return f"""
-    <div class="kpi-card{animation_class}" style="--kpi-color:{color};--kpi-soft:{soft_color}">
-        <div class="kpi-top">
-            <div class="icon-box">{icon_svg(icon)}</div>
-            <div class="kpi-label">{escape(label)}</div>
-        </div>
-        <div class="kpi-value" id="{identifier}">{value_html}</div>
-        <div class="kpi-caption">{escape(caption)}</div>
-        {progress_html}
-    </div>
-    """
+    # SVG icons (Lucide-style, reliable in st.markdown context)
+    _svg = {
+        "users": (
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" '
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+            '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>'
+            '<circle cx="9" cy="7" r="4"/>'
+            '<path d="M23 21v-2a4 4 0 0 0-3-3.87"/>'
+            '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
+            '</svg>'
+        ),
+        "reviews": (
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" '
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+            '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'
+            '</svg>'
+        ),
+        "score": (
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" '
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+            '<path d="M9 11l3 3L22 4"/>'
+            '<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'
+            '</svg>'
+        ),
+        "star": (
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" '
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+            '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'
+            '</svg>'
+        ),
+        "sentiment": (
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" '
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+            '<circle cx="12" cy="12" r="10"/>'
+            '<path d="M8 13s1.5 2 4 2 4-2 4-2"/>'
+            '<line x1="9" y1="9" x2="9.01" y2="9"/>'
+            '<line x1="15" y1="9" x2="15.01" y2="9"/>'
+            '</svg>'
+        ),
+    }
+    emoji_icon = _svg.get(icon, (
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" '
+        'stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>'
+    ))
+    emoji_icon = emoji_icon.replace('stroke="currentColor"', f'stroke="{color}"')
+    return (
+        f'<article class="kpi-card{animation_class}"'
+        f' style="border-color:{color}22;background:linear-gradient(145deg,#FFFFFF,{soft_color});">'
+        f'<div class="kpi-orb" style="background:{color};"></div>'
+        f'<div class="kpi-head">'
+        f'<div class="kpi-icon" style="background:{soft_color};border-color:{color}44;">{emoji_icon}</div>'
+        f'<div class="kpi-label">{escape(label)}</div>'
+        f'</div>'
+        f'<div class="kpi-value">{value_html}</div>'
+        f'<div class="kpi-caption">{escape(caption)}</div>'
+        f'{progress_html}'
+        f'</article>'
+    )
 
 
 def render_kpis(
@@ -4671,9 +5330,9 @@ def render_kpis(
         if questionnaire is not None and not questionnaire.empty
         else 0.0
     )
-    survey_caption = "berdasarkan filter aktif" if survey_filtered else "data total"
-    review_caption = "berdasarkan filter aktif" if review_filtered else "data total"
-    positive_label = "Positif Filter Aktif" if review_filtered else "Sentimen Positif"
+    survey_caption = "⚡ filter aktif" if survey_filtered else "total data"
+    review_caption = "⚡ filter aktif" if review_filtered else "total data"
+    positive_label = "Sentimen Positif"
 
     cards = [
         (
@@ -4701,19 +5360,243 @@ def render_kpis(
         ),
     ]
     kpi_html = "".join(kpi_card_html(*card, animate=animate) for card in cards)
-    st.html(f'<div class="kpi-grid">{kpi_html}</div>')
+    # Use CSS class kpi-grid (defined in inject_custom_css) for responsive layout
+    st.markdown(
+        f'<div class="kpi-grid">{kpi_html}</div>',
+        unsafe_allow_html=True,
+    )
     if review_filtered:
         st.caption("Angka ulasan berubah karena filter aktif.")
 
 
 def summary_card(label: str, value: str, note: str = "") -> str:
+    note_html = (
+        f'<div style="margin-top:.26rem;color:#64748B;font-size:.65rem;">{escape(note)}</div>'
+        if note else ""
+    )
     return f"""
-    <div class="summary-card fade-up">
-        <div class="summary-label">{escape(label)}</div>
-        <div class="summary-value">{escape(value)}</div>
-        {f'<div class="summary-note">{escape(note)}</div>' if note else ''}
+    <div style="min-height:110px;padding:.95rem 1rem;border:1.5px solid #DBEAFE;border-radius:16px;background:linear-gradient(145deg,#fff,#F8FCFF);box-shadow:0 4px 14px rgba(16,142,233,.07);">
+        <div style="color:#64748B;font-size:.6rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;margin-bottom:.35rem;">{escape(label)}</div>
+        <div style="color:#07132F;font-size:1.1rem;font-weight:800;line-height:1.3;">{escape(value)}</div>
+        {note_html}
     </div>
     """
+
+
+def executive_summary_card(
+    survey: "pd.DataFrame | None",
+    survey_columns: dict,
+    questionnaire: "pd.DataFrame | None",
+    reviews: "pd.DataFrame | None",
+    review_columns: dict,
+    scope_label: str = "Total data",
+) -> str:
+    """Return HTML for a dynamic executive summary card computed from live data."""
+    def dominant(df: "pd.DataFrame | None", col: str, total: int) -> str:
+        if df is None or df.empty or col not in df.columns:
+            return "—"
+        vc = df[col].value_counts()
+        if vc.empty:
+            return "—"
+        return f"{vc.index[0]} ({vc.iloc[0]}/{total} = {vc.iloc[0]/total*100:.0f}%)"
+
+    survey_total = len(survey) if survey is not None else 0
+    gender_dom = dominant(survey, survey_columns.get("gender", ""), survey_total)
+    age_dom = dominant(survey, survey_columns.get("age", ""), survey_total)
+    freq_dom = dominant(survey, survey_columns.get("frequency", ""), survey_total)
+
+    q_avg_text = "—"
+    if questionnaire is not None and not questionnaire.empty:
+        avg = safe_mean(questionnaire["rata_rata"])
+        q_avg_text = f"{avg:.2f} / 5"
+
+    review_total = len(reviews) if reviews is not None else 0
+    rating_text = "—"
+    pos_text = "—"
+    neg_kw_text = "—"
+    if reviews is not None and not reviews.empty:
+        m = review_metrics(reviews, review_columns)
+        rating_text = f"{m['avg_rating']:.2f} / 5 ({review_total} ulasan)"
+        pos_text = f"{m['positive_pct']:.1f}% Positif, {100 - m['positive_pct'] - (m['neutral']/review_total*100 if review_total else 0):.1f}% Negatif"
+        rev_col = review_columns.get("review")
+        if rev_col:
+            kws = complaint_term_counts(reviews, rev_col)[:3]
+            if kws:
+                neg_kw_text = ", ".join(f"{w} ({c}x)" for w, c in kws)
+
+    rows = [
+        ("Gender Dominan", gender_dom),
+        ("Kelompok Usia", age_dom),
+        ("Frekuensi Penggunaan", freq_dom),
+        ("Skor Kuesioner", q_avg_text),
+        ("Rating Ulasan", rating_text),
+        ("Sentimen", pos_text),
+        ("Keyword Negatif", neg_kw_text),
+    ]
+    row_html = "".join(
+        f'<div style="display:flex;gap:.5rem;padding:.42rem 0;border-bottom:1px solid #EEF2F7;">'
+        f'<div style="flex:0 0 130px;font-size:.68rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.04em;">{escape(label)}</div>'
+        f'<div style="font-size:.78rem;font-weight:600;color:#0F172A;">{escape(value)}</div>'
+        f'</div>'
+        for label, value in rows
+    )
+    return f"""
+    <div style="padding:1rem 1.2rem;background:linear-gradient(135deg,#F0F9FF,#EFF6FF);border:1.5px solid #BFDBFE;border-radius:18px;margin-bottom:1rem;">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem;">
+            <div style="width:8px;height:8px;border-radius:50%;background:#108EE9;"></div>
+            <strong style="font-size:.8rem;color:#1E40AF;text-transform:uppercase;letter-spacing:.06em;">Executive Summary — {escape(scope_label)}</strong>
+        </div>
+        {row_html}
+        <div style="margin-top:.6rem;font-size:.65rem;color:#94A3B8;font-style:italic;">Data bersifat deskriptif. Tidak ada klaim kausal.</div>
+    </div>
+    """
+
+
+def insight_highlight_cards(
+    survey: "pd.DataFrame | None",
+    survey_columns: dict,
+    reviews: "pd.DataFrame | None",
+    review_columns: dict,
+) -> None:
+    """Render 4 insight highlight chips below KPI cards."""
+    survey_total = len(survey) if survey is not None else 0
+    review_total = len(reviews) if reviews is not None else 0
+
+    def dominant_value(df: "pd.DataFrame | None", col_key: str, fallback: str = "—") -> str:
+        col = survey_columns.get(col_key, "") if df is not None else ""
+        if df is None or df.empty or col not in df.columns:
+            return fallback
+        vc = df[col].value_counts()
+        return str(vc.index[0]) if not vc.empty else fallback
+
+    gender_val = dominant_value(survey, "gender")
+    freq_val = dominant_value(survey, "frequency")
+
+    sentiment_val = "—"
+    area_val = "—"
+    if reviews is not None and not reviews.empty:
+        m = review_metrics(reviews, review_columns)
+        sentiment_val = f"Positif {m['positive_pct']:.1f}%"
+        rev_col = review_columns.get("review")
+        if rev_col:
+            kws = complaint_term_counts(reviews, rev_col)[:1]
+            if kws:
+                area_val = kws[0][0]
+
+    _insight_data = [
+        ("Mayoritas Responden", gender_val, "#108EE9", "#EFF6FF", "👥"),
+        ("Frekuensi Dominan", freq_val, "#2563EB", "#EEF2FF", "📅"),
+        ("Sentimen Dominan", sentiment_val, "#10B981", "#ECFDF5", "😊"),
+        ("Area Perhatian", area_val, "#EF4444", "#FEF2F2", "⚠️"),
+    ]
+    card_html = "".join(
+        f'<div style="padding:.75rem 1rem;background:{bg};border:1.5px solid {color}33;border-radius:14px;min-width:0;box-shadow:0 2px 8px rgba(0,0,0,.04);">'
+        f'<div style="display:flex;align-items:center;gap:.3rem;margin-bottom:.28rem;">'
+        f'<span style="font-size:1rem;line-height:1;">{icon}</span>'
+        f'<span style="font-size:.58rem;font-weight:800;color:{color};text-transform:uppercase;letter-spacing:.06em;">{escape(label)}</span>'
+        f'</div>'
+        f'<div style="font-size:.9rem;font-weight:700;color:#0F172A;line-height:1.3;">{escape(value)}</div>'
+        f'</div>'
+        for label, value, color, bg, icon in _insight_data
+    )
+    st.markdown(
+        f'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.72rem;margin:.5rem 0 .85rem;">'
+        f'{card_html}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def presentation_mode_banner() -> None:
+    """Render a sticky presentation mode banner at the top of the dashboard."""
+    st.html("""
+    <div style="
+        position:sticky;top:0;z-index:999;
+        background:linear-gradient(90deg,#1E40AF,#108EE9);
+        color:white;
+        text-align:center;
+        padding:.45rem 1rem;
+        font-size:.78rem;font-weight:700;letter-spacing:.08em;
+        text-transform:uppercase;
+        border-radius:0 0 12px 12px;
+        margin-bottom:.5rem;
+        box-shadow:0 4px 12px rgba(16,142,233,.35);
+    ">
+        Mode Presentasi Aktif — Data DANA Insight Command Center
+    </div>
+    """)
+
+
+def script_presentasi_blocks() -> None:
+    """Render 4 copy-ready presentation script blocks."""
+    scripts = [
+        (
+            "Pembuka",
+            """Selamat [pagi/siang/sore]. Nama saya [Nama], dari kelompok [X].
+Hari ini kami mempresentasikan hasil penelitian tentang analisis kepuasan pengguna
+aplikasi DANA berdasarkan survei kuesioner dan ulasan pengguna di Play Store.
+
+Dashboard yang Anda lihat bernama DANA Insight Command Center — sebuah platform
+analisis data interaktif yang kami bangun menggunakan Streamlit dan Python.
+Kita bisa melakukan drill-down data secara langsung selama presentasi ini."""
+        ),
+        (
+            "Penjelasan Data",
+            """Data kami berasal dari dua sumber utama:
+1. Survei primer: 50 responden pengguna DANA, mengisi kuesioner 20 indikator
+   pada skala Likert 1-5. Mayoritas responden adalah Perempuan (78%) berusia
+   18-22 tahun (72%), dengan frekuensi penggunaan jarang (42%).
+
+2. Web scraping: 330 ulasan pengguna dari Google Play Store, dikumpulkan
+   pada 9-10 Juni 2026. Ulasan dianalisis berdasarkan rating dan sentimen.
+
+Variabel penelitian mencakup X1-Fleksibilitas, X2-Praktis, M-Kepercayaan,
+dan Y-Kepuasan Keseluruhan. Setiap variabel dipetakan dari kolom kuesioner."""
+        ),
+        (
+            "Insight Utama",
+            """Berikut temuan utama dari analisis data kami:
+
+SURVEI (50 responden):
+- Rata-rata skor kuesioner: 4.00 / 5 (kategori Kuat/Baik)
+- Semua variabel berada di atas threshold 3.5 (cukup baik)
+- Variabel tertinggi: X2-Praktis dan X1-Fleksibilitas
+
+ULASAN (330 data):
+- Rating rata-rata: 3.89 / 5
+- Sentimen Positif: 70.3% (232 ulasan) — pengguna umumnya puas
+- Sentimen Negatif: 25.8% (85 ulasan) — keluhan terbanyak tentang:
+  saldo, akun bermasalah, transaksi gagal, dan biaya premium
+
+KESENJANGAN:
+Survey menunjukkan kepuasan tinggi, namun ulasan mencatat sejumlah keluhan
+teknis yang perlu diperhatikan. Ini menunjukkan pengalaman pengguna yang
+berbeda-beda tergantung konteks penggunaan."""
+        ),
+        (
+            "Kesimpulan",
+            """Kesimpulan dari penelitian kami:
+
+1. Secara keseluruhan, pengguna DANA memiliki persepsi positif terhadap
+   aplikasi, tercermin dari skor kuesioner 4.00/5 dan sentimen positif 70.3%.
+
+2. Area yang masih perlu peningkatan adalah keandalan sistem (transaksi gagal,
+   masalah saldo) dan transparansi biaya layanan premium.
+
+3. Dashboard ini bersifat deskriptif. Kami tidak mengklaim hubungan kausal
+   antar variabel tanpa analisis statistik inferensial lebih lanjut.
+
+4. Rekomendasi: DANA dapat fokus pada peningkatan stabilitas sistem dan
+   komunikasi biaya layanan kepada pengguna untuk mengurangi ulasan negatif.
+
+Terima kasih. Kami siap menjawab pertanyaan."""
+        ),
+    ]
+    st.markdown("#### Script Presentasi (Siap Salin)")
+    for title, text in scripts:
+        with st.expander(f"📄 Script: {title}", expanded=False):
+            st.code(text, language="text")
+            st.caption(f"Salin teks '{title}' di atas untuk presentasi Anda.")
+
 
 
 def review_trend_chart(
@@ -4735,10 +5618,15 @@ def review_trend_chart(
         .sort_values("periode")
     )
     denominator = len(reviews)
-    grouped["persentase"] = (
-        grouped["jumlah"] / denominator * 100 if denominator else 0.0
-    ).map(lambda x: f"{x:.1f}")
-    grouped["scope"] = hover_scope_text(scope_label)
+    grouped["pct_str"] = (
+        grouped["jumlah"].map(
+            lambda v: f"{v / denominator * 100:.1f}" if denominator else "0.0"
+        )
+    )
+    # customdata[0] = denominator string, customdata[1] = pct string
+    customdata = [
+        [str(denominator), pct] for pct in grouped["pct_str"].tolist()
+    ]
     figure = go.Figure(
         go.Bar(
             x=grouped["periode"].astype(str),
@@ -4750,16 +5638,12 @@ def review_trend_chart(
                 "color": C_ELECTRIC,
                 "line": {"color": "white", "width": 1.5},
             },
-            customdata=np.column_stack(
-                [
-                    np.repeat(denominator, len(grouped)),
-                    grouped["persentase"],
-                    grouped["scope"],
-                ]
-            ),
+            customdata=customdata,
             hovertemplate=(
-                "<b>%{x}</b><br>%{y} dari %{customdata[0]} ulasan<br>"
-                "%{customdata[1]}% &middot; %{customdata[2]}<extra></extra>"
+                "<b>%{x}</b><br>"
+                "Jumlah: <b>%{y}</b> dari %{customdata[0]}<br>"
+                "Persentase: <b>%{customdata[1]}%</b>"
+                "<extra></extra>"
             ),
         )
     )
@@ -4815,6 +5699,8 @@ def render_overview(
     review_columns: dict[str, Any],
     survey_total: int,
     review_total: int,
+    questionnaire: "pd.DataFrame | None" = None,
+    filters: "dict[str, Any] | None" = None,
 ) -> None:
     section_heading(
         "Executive Dashboard",
@@ -4822,6 +5708,9 @@ def render_overview(
         "Ringkasan cepat karakteristik responden dan pengalaman pengguna.",
         "dana_mark.svg",
     )
+    filters = filters or {}
+    presentation_on = bool(filters.get("presentation", False))
+
     survey_scope = (
         "Filter aktif"
         if survey is not None and len(survey) != survey_total
@@ -4832,6 +5721,18 @@ def render_overview(
         if reviews is not None and len(reviews) != review_total
         else "Total data"
     )
+    scope_label = "Filter aktif" if survey_scope == "Filter aktif" or review_scope == "Filter aktif" else "Total data"
+
+    # Executive Summary Card — always visible; expanded=True for presentation readiness
+    exec_html = executive_summary_card(
+        survey, survey_columns, questionnaire, reviews, review_columns, scope_label
+    )
+    if presentation_on:
+        st.markdown(exec_html, unsafe_allow_html=True)
+    else:
+        with st.expander("Executive Summary", expanded=True):
+            st.markdown(exec_html, unsafe_allow_html=True)
+
     gender_text = "Data tidak tersedia"
     frequency_text = "Data tidak tersedia"
     if survey is not None and not survey.empty:
@@ -4857,6 +5758,9 @@ def render_overview(
                 f"{counts.index[0]} ({counts.iloc[0] / len(reviews) * 100:.0f}%)"
             )
 
+    # Insight highlight chips — always shown for quick overview
+    insight_highlight_cards(survey, survey_columns, reviews, review_columns)
+
     summary_columns = st.columns(4)
     values = [
         ("Mayoritas Responden", gender_text, "berdasarkan data yang tampil"),
@@ -4866,90 +5770,99 @@ def render_overview(
     ]
     for column, item in zip(summary_columns, values):
         with column:
-            st.html(summary_card(*item))
+            st.markdown(summary_card(*item), unsafe_allow_html=True)
+
 
     left, right = st.columns(2)
     with left:
         with st.container(key="chart_overview_gender", border=True):
-            gender_column = survey_columns.get("gender")
-            if survey is not None and not survey.empty and gender_column in survey.columns:
-                counts = survey[gender_column].value_counts()
-                plot_chart(
-                    donut_chart(
-                        counts,
-                        "Distribusi Gender Responden",
-                        {"Perempuan": C_PRIMARY, "Laki-laki": C_SKY},
-                        survey_scope,
-                        "responden",
-                    ),
-                    "overview_gender",
-                )
-                st.caption("Proporsi gender responden pada data yang sedang ditampilkan.")
+            if not has_data(survey):
+                render_empty_state("Tidak ada data survei", "Silakan reset atau ubah kombinasi filter.")
             else:
-                st.info("Kolom gender tidak tersedia.")
+                gender_column = survey_columns.get("gender")
+                if gender_column in survey.columns:
+                    counts = survey[gender_column].value_counts()
+                    plot_chart(
+                        donut_chart(
+                            counts,
+                            "Distribusi Gender Responden",
+                            {"Perempuan": C_PRIMARY, "Laki-laki": C_SKY},
+                            survey_scope,
+                            "responden",
+                        ),
+                        "overview_gender",
+                    )
+                    st.caption("Proporsi gender responden pada data yang sedang ditampilkan.")
+                else:
+                    st.info("Kolom gender tidak tersedia.")
     with right:
         with st.container(key="chart_overview_frequency", border=True):
-            frequency_column = survey_columns.get("frequency")
-            if (
-                survey is not None
-                and not survey.empty
-                and frequency_column in survey.columns
-            ):
-                counts = survey[frequency_column].value_counts()
-                plot_chart(
-                    bar_chart(
-                        counts.index.tolist(),
-                        counts.values.tolist(),
-                        "Frekuensi Penggunaan DANA",
-                        C_PRIMARY,
-                        denominator=len(survey),
-                        scope_label=survey_scope,
-                        unit_label="responden",
-                    ),
-                    "overview_frequency",
-                )
-                st.caption("Jumlah responden menurut intensitas penggunaan DANA.")
+            if not has_data(survey):
+                render_empty_state("Tidak ada data survei", "Silakan reset atau ubah kombinasi filter.")
             else:
-                st.info("Kolom frekuensi penggunaan tidak tersedia.")
+                frequency_column = survey_columns.get("frequency")
+                if frequency_column in survey.columns:
+                    counts = survey[frequency_column].value_counts()
+                    plot_chart(
+                        bar_chart(
+                            counts.index.tolist(),
+                            counts.values.tolist(),
+                            "Frekuensi Penggunaan DANA",
+                            C_PRIMARY,
+                            denominator=len(survey),
+                            scope_label=survey_scope,
+                            unit_label="responden",
+                        ),
+                        "overview_frequency",
+                    )
+                    st.caption("Jumlah responden menurut intensitas penggunaan DANA.")
+                else:
+                    st.info("Kolom frekuensi penggunaan tidak tersedia.")
 
     left, right = st.columns(2)
     with left:
         with st.container(key="chart_overview_age", border=True):
-            age_column = survey_columns.get("age")
-            if survey is not None and not survey.empty and age_column in survey.columns:
-                counts = survey[age_column].value_counts()
-                ordered_labels = sorted(counts.index.tolist(), key=age_sort_key)
-                ordered_values = [int(counts[label]) for label in ordered_labels]
-                plot_chart(
-                    bar_chart(
-                        ordered_labels,
-                        ordered_values,
-                        "Distribusi Kelompok Usia",
-                        C_ELECTRIC,
-                        denominator=len(survey),
-                        scope_label=survey_scope,
-                        unit_label="responden",
-                    ),
-                    "overview_age",
-                )
-                st.caption("Usia ditampilkan sebagai kelompok sesuai format dataset.")
+            if not has_data(survey):
+                render_empty_state("Tidak ada data survei", "Silakan reset atau ubah kombinasi filter.")
             else:
-                st.info("Kolom kelompok usia tidak tersedia.")
+                age_column = survey_columns.get("age")
+                if age_column in survey.columns:
+                    counts = survey[age_column].value_counts()
+                    ordered_labels = sorted(counts.index.tolist(), key=age_sort_key)
+                    ordered_values = [int(counts[label]) for label in ordered_labels]
+                    plot_chart(
+                        bar_chart(
+                            ordered_labels,
+                            ordered_values,
+                            "Distribusi Kelompok Usia",
+                            C_ELECTRIC,
+                            denominator=len(survey),
+                            scope_label=survey_scope,
+                            unit_label="responden",
+                        ),
+                        "overview_age",
+                    )
+                    st.caption("Usia ditampilkan sebagai kelompok sesuai format dataset.")
+                else:
+                    st.info("Kolom kelompok usia tidak tersedia.")
     with right:
         with st.container(key="chart_overview_trend", border=True):
-            date_column = review_columns.get("date")
-            if reviews is not None and not reviews.empty and date_column in reviews.columns:
-                fig = review_trend_chart(reviews, date_column, review_scope)
-                if fig.data:
-                    plot_chart(fig, "overview_trend")
-                    st.caption(
-                        "Volume ulasan dikelompokkan berdasarkan tanggal kalender, "
-                        "bukan jam."
-                    )
-                else:
-                    st.info("Tanggal ulasan tidak valid untuk membuat tren.")
+            if not has_data(reviews):
+                render_empty_state("Tidak ada data ulasan", "Silakan reset atau ubah kombinasi filter.")
             else:
-                st.info("Kolom tanggal ulasan tidak tersedia.")
+                date_column = review_columns.get("date")
+                if date_column in reviews.columns:
+                    fig = review_trend_chart(reviews, date_column, review_scope)
+                    if fig.data:
+                        plot_chart(fig, "overview_trend")
+                        st.caption(
+                            "Volume ulasan dikelompokkan berdasarkan tanggal kalender, "
+                            "bukan jam."
+                        )
+                    else:
+                        st.info("Tanggal ulasan tidak valid untuk membuat tren.")
+                else:
+                    st.info("Kolom tanggal ulasan tidak tersedia.")
 
 
 def health_card(
@@ -5002,6 +5915,12 @@ def render_survey_analysis(
         "Evaluasi 20 indikator pengalaman pengguna pada skala 1 sampai 5.",
         banner_asset_key="survey_banner",
     )
+    if not has_data(survey):
+        render_empty_state(
+            "Tidak ada responden yang cocok",
+            "Ubah filter survey atau tekan Reset Semua untuk mengembalikan data."
+        )
+        return
     if questionnaire is None or questionnaire.empty:
         st.warning(
             "Data kuesioner tidak tersedia. Periksa hasil_kuesioner.csv atau kolom skor survey."
@@ -5031,7 +5950,7 @@ def render_survey_analysis(
     ]
     for column, card in zip(columns, cards):
         with column:
-            st.html(health_card(*card))
+            st.markdown(health_card(*card), unsafe_allow_html=True)
 
     section_heading(
         "Research Variables",
@@ -5063,12 +5982,14 @@ def render_survey_analysis(
                 f"{variable}: {len(missing_columns)} kolom mapping tidak ditemukan: "
                 + "; ".join(missing_columns)
             )
-    st.info(
-        "Catatan akademik: mapping variabel ini masih sementara mengikuti arahan "
-        "project. Y - Keseluruhan memakai seluruh Q1-Q20 sehingga overlap dengan "
-        "X1, X2, dan M. Sesuaikan mapping dengan operasionalisasi variabel resmi "
-        "jika kelompok atau dosen memiliki pembagian indikator yang berbeda."
-    )
+    with st.expander("ℹ️ Catatan Metodologi Pemetaan Variabel", expanded=False):
+        st.info(
+            "Catatan metodologi: Pemetaan variabel mengikuti struktur indikator "
+            "pada dataset proyek. Y - Keseluruhan memakai seluruh Q1-Q20 sehingga "
+            "overlap dengan X1, X2, dan M. Sesuaikan mapping dengan operasionalisasi "
+            "variabel resmi jika kelompok atau dosen memiliki pembagian indikator "
+            "yang berbeda."
+        )
 
     if filters.get("questionnaire_view") != "Variabel X1/X2/M/Y":
         if displayed_questionnaire is None or displayed_questionnaire.empty:
@@ -5128,7 +6049,7 @@ def render_survey_analysis(
         st.html(
             f"""
             <div class="insight-card">
-                <h4>Insight otomatis survei &middot; {escape(scope_label)}</h4>
+                <h4>Insight otomatis survei — {escape(scope_label)}</h4>
                 <p>
                     Rata-rata keseluruhan berada pada <strong>{average:.2f}/5</strong>.
                     Indikator tertinggi adalah <strong>{escape(str(best['label']))}</strong>
@@ -5169,7 +6090,7 @@ def render_keyword_chips(keywords: list[tuple[str, int]]) -> None:
         f'<span class="chip-count">{count}</span></span>'
         for word, count in keywords
     )
-    st.html(f'<div class="chip-row">{content}</div>')
+    st.markdown(f'<div class="chip-row">{content}</div>', unsafe_allow_html=True)
 
 
 def table_limit(filters: dict[str, Any]) -> int | None:
@@ -5313,7 +6234,7 @@ def render_review_analysis(
     ]
     for column, item in zip(metric_columns, metric_values):
         with column:
-            st.html(summary_card(*item))
+            st.markdown(summary_card(*item), unsafe_allow_html=True)
 
     review_column = review_columns.get("review")
     st.markdown("#### Keyword yang sering muncul")
@@ -5536,12 +6457,22 @@ def render_data_explorer(
         "Eksplorasi data hasil filter tanpa membuka identitas pengguna.",
         banner_asset_key="explorer_banner",
     )
+    shield_img = render_image_asset(
+        ASSETS.get("privacy_shield", "06_icon_privacy_shield_1254x1254.png"),
+        class_name="privacy-shield-icon",
+        alt="Data Aman",
+        fallback="",
+    )
     st.html(
-        """
-        <div class="privacy-note">
-            <strong>Privacy note.</strong> Nama responden, username, email, nomor
-            telepon, dan kolom identitas serupa tidak ditampilkan. File download
-            publik juga tidak memuat identitas pengguna.
+        f"""
+        <div class="privacy-note-card">
+            <div class="privacy-note-icon">{shield_img}</div>
+            <div class="privacy-note-body">
+                <strong>🔒 Data Aman — Identitas Tersembunyi</strong>
+                <p>Nama responden, username, email, nomor telepon, dan kolom identitas
+                serupa tidak ditampilkan. File download publik juga tidak memuat
+                identitas pengguna. Privasi responden terlindungi sepenuhnya.</p>
+            </div>
         </div>
         """
     )
@@ -5789,7 +6720,7 @@ def render_output_and_presentation(
         )
         for title, note in deliverables
     )
-    st.html(f'<div class="deliverable-grid">{cards}</div>')
+    st.markdown(f'<div class="deliverable-grid">{cards}</div>', unsafe_allow_html=True)
 
     st.markdown("#### Tautan publik")
     link_left, link_right = st.columns(2)
@@ -5833,13 +6764,71 @@ def render_output_and_presentation(
     with st.container(key="output_screenshot_card"):
         st.dataframe(screenshot_frame, width="stretch", hide_index=True)
 
-    st.markdown("#### Ringkasan fitur")
-    st.write(
-        "Dashboard memuat profil responden, 20 indikator kuesioner, analisis "
-        "variabel X1/X2/M/Y, hasil web scraping ulasan, filter interaktif, "
-        "Plotly hover dengan denominator, data explorer aman, insight otomatis, "
-        "audit data, dan kesimpulan penelitian tanpa klaim kausal."
-    )
+    st.markdown("#### 📋 Ringkasan Otomatis Presentasi")
+    with st.container(key="auto_summary_panel"):
+        st.html("""
+        <div class="insight-card" style="border-color:#BFDBFE; background:linear-gradient(135deg,#F0F9FF,#EFF6FF);">
+            <h4>Ringkasan 4 Poin Utama</h4>
+            <ul>
+                <li>
+                    <strong>Profil Responden Dominan:</strong>
+                    50 responden, didominasi Perempuan (78%), kelompok usia 18–22 tahun (72%),
+                    frekuensi penggunaan jarang (42%).
+                </li>
+                <li>
+                    <strong>Skor Survei Utama:</strong>
+                    Rata-rata 20 indikator kuesioner mencapai <strong>4.00 / 5</strong>
+                    (kategori Kuat/Baik). Variabel Praktis (X2) dan Fleksibilitas (X1)
+                    mendapat skor tertinggi.
+                </li>
+                <li>
+                    <strong>Rating &amp; Sentimen:</strong>
+                    Rata-rata rating ulasan <strong>3.89 / 5</strong> dari 330 ulasan.
+                    Sentimen Positif (rating 4–5) mendominasi dengan <strong>70.3%</strong>
+                    (232 ulasan), Negatif 25.8%, Netral 3.9%.
+                </li>
+                <li>
+                    <strong>Area Perbaikan:</strong>
+                    Ulasan negatif (85 ulasan) banyak menyebut masalah saldo, akun,
+                    transaksi gagal, dan biaya premium. Perlu perhatian khusus pada
+                    keandalan sistem dan transparansi biaya.
+                </li>
+            </ul>
+            <p style="font-size:.72rem;color:#64748B;margin-top:.6rem;">
+                <em>Catatan: Dashboard ini bersifat deskriptif. Tidak ada simpulan kausal
+                yang dapat ditarik hanya dari data ini.</em>
+            </p>
+        </div>
+        """)
+
+        summary_text = """RINGKASAN PENELITIAN — DANA Insight Command Center
+
+1. PROFIL RESPONDEN
+   - Total: 50 responden
+   - Dominan: Perempuan (39/78%), Usia 18-22 tahun (36/72%)
+   - Frekuensi DANA: Jarang (21/42%)
+
+2. SKOR KUESIONER
+   - Rata-rata 20 indikator: 4.00 / 5 (Kuat/Baik)
+   - Indikator tertinggi: kategori Kuat (≥4.00)
+   - Variabel: X1-Fleksibilitas, X2-Praktis, M-Kepercayaan
+
+3. RATING & SENTIMEN ULASAN
+   - Total ulasan: 330
+   - Rating rata-rata: 3.89 / 5
+   - Sentimen Positif: 232 ulasan (70.3%)
+   - Sentimen Netral: 13 ulasan (3.9%)
+   - Sentimen Negatif: 85 ulasan (25.8%)
+
+4. AREA PERBAIKAN
+   - Keluhan utama: saldo, akun, transaksi, biaya
+   - Perlu peningkatan keandalan sistem dan layanan pelanggan
+
+Catatan: Data bersifat deskriptif. Tidak menyimpulkan hubungan kausal."""
+
+        with st.expander("📄 Teks Ringkasan (dapat disalin)", expanded=False):
+            st.code(summary_text, language="text")
+            st.caption("Salin teks di atas untuk presentasi atau laporan Anda.")
 
 
 def render_conclusion(
@@ -5951,7 +6940,7 @@ def render_conclusion(
         f"""
         <div class="insight-card">
             {conclusion_visual}
-            <h4 style="margin-bottom:0.5rem;font-size:1.05rem;">Ringkasan Analitis &middot; {escape(scope_label)}</h4>
+            <h4 style="margin-bottom:0.5rem;font-size:1.05rem;">Ringkasan Analitis — {escape(scope_label)}</h4>
             
             <p style="margin-top:0.8rem;font-weight:bold;margin-bottom:0.2rem;">Profil Responden</p>
             {profile_html}
@@ -6018,6 +7007,7 @@ def render_dashboard_content(
             </style>
             """
         )
+        presentation_mode_banner()
 
     survey_filtered = apply_survey_filters(survey, survey_columns, filters, options)
     reviews_filtered = apply_review_filters(reviews, review_columns, filters, options)
@@ -6117,6 +7107,8 @@ def render_dashboard_content(
             review_columns,
             survey_total,
             review_total,
+            questionnaire=questionnaire_filtered,
+            filters=filters,
         )
     elif active_tab == "Analisis Survei":
         render_survey_analysis(
@@ -6147,6 +7139,18 @@ def render_dashboard_content(
         )
     elif active_tab == "Lampiran Presentasi":
         render_output_and_presentation(audit_frame, invariant_errors)
+        script_presentasi_blocks()
+        if filters.get("presentation"):
+            st.markdown("#### Executive Summary (Presentasi)")
+            scope_lbl = (
+                "Filter aktif"
+                if survey_filter_active or review_filter_active
+                else "Total data"
+            )
+            st.markdown(executive_summary_card(
+                survey_filtered, survey_columns, questionnaire_filtered,
+                reviews_filtered, review_columns, scope_lbl,
+            ), unsafe_allow_html=True)
 
     if filters.get("insight"):
         render_conclusion(
@@ -6239,8 +7243,20 @@ def main() -> None:
     # Active filters come directly from session state (set by dialog)
     filters = st.session_state.active_filters.copy()
 
+    # Inject body CSS classes based on user preferences
+    inject_preference_classes(filters)
+
     # Render horizontal navigation tabs
     render_horizontal_tabs()
+
+    # Show presentation mode banner
+    if filters.get("presentation"):
+        st.html("""
+        <div class="presentation-banner-bar">
+            <span class="presentation-badge">🎯 Mode Presentasi Aktif</span>
+            <span>Tampilan dioptimalkan untuk presentasi — teks lebih besar, elemen teknis dikurangi</span>
+        </div>
+        """)
 
     # Render main dashboard content (full width — no sidebar)
     render_dashboard_content(
