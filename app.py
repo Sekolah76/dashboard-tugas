@@ -153,13 +153,15 @@ def apply_fullscreen_chart_behavior(fig):
 
 def render_plotly_normal(fig, key=None):
     apply_normal_chart_behavior(fig)
-    st.plotly_chart(
-        fig,
-        use_container_width=True,
-        theme=None,
-        config=PLOTLY_CARD_CONFIG,
-        key=key,
-    )
+    container_key = f"normal_plotly_container_{key}" if key else "normal_plotly_container"
+    with st.container(key=container_key):
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+            theme=None,
+            config=PLOTLY_CARD_CONFIG,
+            key=key,
+        )
 
 
 def render_plotly_fullscreen(fig, key=None):
@@ -179,6 +181,7 @@ NAV_ITEMS = (
     ("Analisis Ulasan", "Rating, sentimen, dan suara pengguna"),
     ("Data Explorer", "Eksplorasi data publik"),
     ("Lampiran Presentasi", "Output dan kesiapan UAS"),
+    ("Snapshot Flyer", "Snapshot ringkas flyer presentasi"),
 )
 
 STOPWORDS_ID = {
@@ -2633,6 +2636,210 @@ def inject_custom_css() -> None:
         @media (max-width: 760px) {{
             .kpi-grid {{ grid-template-columns: 1fr; }}
         }}
+
+        /* ── SNAPSHOT FLYER TAB STYLING ── */
+        .st-key-snapshot_flyer_frame_desktop {{
+            background: #FFFFFF !important;
+            border: 2px solid #D7E8FF !important;
+            border-radius: 20px !important;
+            padding: 24px !important;
+            box-shadow: 0 10px 30px rgba(16, 142, 233, 0.04) !important;
+        }}
+
+        .flyer-kpi-grid {{
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }}
+
+        .flyer-kpi-card {{
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 12px 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }}
+
+        .flyer-kpi-label {{
+            font-size: 0.65rem;
+            color: #64748B;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }}
+
+        .flyer-kpi-value {{
+            font-size: 1.5rem;
+            font-weight: 850;
+            color: #108EE9;
+            font-variant-numeric: tabular-nums;
+        }}
+
+        .flyer-insight-card {{
+            background: #F0F6FF;
+            border: 1px solid #D7E8FF;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }}
+
+        .flyer-insight-title {{
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #07132F;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #D7E8FF;
+            padding-bottom: 6px;
+        }}
+
+        .flyer-insight-item {{
+            font-size: 0.78rem;
+            color: #475569;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }}
+
+        .flyer-insight-item strong {{
+            color: #102040;
+        }}
+
+        .flyer-review-card {{
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 5px rgba(7, 19, 47, 0.03);
+        }}
+
+        .flyer-review-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }}
+
+        .flyer-review-date {{
+            font-size: 0.7rem;
+            color: #64748B;
+            font-weight: 600;
+        }}
+
+        .flyer-review-text {{
+            font-size: 0.75rem;
+            color: #102040;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: normal;
+        }}
+
+        /* Desktop vs Mobile display utilities */
+        div[class*="st-key-"][class*="_desktop"] {{
+            display: block !important;
+        }}
+        div[class*="st-key-"][class*="_mobile"] {{
+            display: none !important;
+        }}
+        @media (max-width: 768px) {{
+            div[class*="st-key-"][class*="_desktop"] {{
+                display: none !important;
+            }}
+            div[class*="st-key-"][class*="_mobile"] {{
+                display: block !important;
+            }}
+        }}
+
+        /* Scoped style to hide Plotly zoom/select overlays in normal charts */
+        div[class*="st-key-normal_plotly_container"] .js-plotly-plot .selectlayer,
+        div[class*="st-key-normal_plotly_container"] .js-plotly-plot .zoomlayer,
+        div[class*="st-key-normal_plotly_container"] .js-plotly-plot .dragcover {{
+            display: none !important;
+            pointer-events: none !important;
+        }}
+
+        /* Fullscreen mobile chart dialog adjustments */
+        @media (max-width: 768px) {{
+            div[data-testid="stDialog"] > div {{
+                width: 92vw !important;
+                max-width: 92vw !important;
+                max-height: 85vh !important;
+                padding: 12px !important;
+            }}
+            /* Clamp the height of the chart container in fullscreen mobile view */
+            div[data-testid="stDialog"] [data-testid="stPlotlyChart"] {{
+                height: 360px !important;
+                min-height: 320px !important;
+                max-height: 420px !important;
+            }}
+            /* Hide modal header title text to avoid double titles (body title remains visible) */
+            div[data-testid="stDialog"] h1[id*="detail-grafik"] {{
+                display: none !important;
+            }}
+            /* Make dialog close button larger and easier to click on mobile viewports */
+            div[data-testid="stDialog"] [data-testid="stHeader"] button,
+            div[data-testid="stDialog"] button[aria-label="Close"] {{
+                width: 44px !important;
+                height: 44px !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                top: 8px !important;
+                right: 8px !important;
+            }}
+        }}
+
+        /* Responsive overrides for layout columns on mobile screen widths */
+        @media (max-width: 768px) {{
+            /* Stack columns inside all containers with key starting with layout_ */
+            div[class*="st-key-layout_"] [data-testid="stHorizontalBlock"] {{
+                flex-direction: column !important;
+                gap: 16px !important;
+            }}
+            div[class*="st-key-layout_"] [data-testid="stHorizontalBlock"] > div {{
+                width: 100% !important;
+                max-width: 100% !important;
+            }}
+
+            /* Enforce 2-column layout for KPI grid on mobile */
+            .kpi-grid {{
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+                margin: 0.8rem 0 1.2rem !important;
+            }}
+            .kpi-card {{
+                min-height: 112px !important;
+                padding: 10px 8px !important;
+            }}
+            .kpi-value {{
+                font-size: 1.45rem !important;
+                font-variant-numeric: tabular-nums !important;
+            }}
+            .kpi-icon {{
+                width: 36px !important;
+                height: 36px !important;
+                flex: 0 0 36px !important;
+                font-size: 1.15rem !important;
+            }}
+            .kpi-label {{
+                font-size: 0.58rem !important;
+                letter-spacing: 0.05em !important;
+            }}
+            .kpi-caption {{
+                display: none !important;
+            }}
+            .progress-track {{
+                margin-top: 0.4rem !important;
+                height: 4px !important;
+            }}
+        }}
         """
     # Split into two halves to reduce peak memory usage during injection.
     # A 64KB f-string consumed in one markdown() call can trigger MemoryError
@@ -3866,6 +4073,103 @@ def hover_scope_text(scope_label: str) -> str:
     return scope_label
 
 
+def render_static_compact_table(
+    df: pd.DataFrame,
+    columns: list[str] | None = None,
+    max_rows: int = 6,
+    title: str | None = None,
+) -> None:
+    from html import escape
+    to_display = df.copy()
+
+    # Drop identity columns only, do not automatically drop 'responden'
+    identity_cols = [
+        "nama", "username", "email", "telepon", "phone", "kontak",
+        "user_id", "id_user", "nomor_hp", "no_hp"
+    ]
+    cols_to_drop = [
+        c for c in to_display.columns
+        if any(id_field in c.lower() for id_field in identity_cols)
+    ]
+    to_display = to_display.drop(columns=cols_to_drop, errors="ignore")
+
+    # Select requested columns if they exist
+    if columns:
+        valid_cols = [c for c in columns if c in to_display.columns]
+        if valid_cols:
+            to_display = to_display[valid_cols]
+
+    to_display = to_display.head(max_rows)
+
+    # Build HTML table with clean styles
+    css = """
+    <style>
+    .static-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        margin: 0.5rem 0;
+        border-radius: 12px;
+        border: 1px solid #D7E8FF;
+    }
+    .static-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-size: 0.8rem;
+        color: #102040;
+    }
+    .static-table th, .static-table td {
+        padding: 8px 12px;
+        text-align: left;
+        border-bottom: 1px solid #E2E8F0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .static-table th {
+        background-color: #F3F8FF;
+        font-weight: 700;
+        color: #5C6B86;
+    }
+    .static-table tr:last-child td {
+        border-bottom: none;
+    }
+    .static-table td.long-text {
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    </style>
+    """
+
+    html = f'<div class="static-table-wrap">{css}'
+    if title:
+        html += (
+            '<div style="font-weight:700; font-size:0.85rem; padding: 8px 12px; '
+            f'background:#EAF5FF; color:#0B5ED7; border-bottom:1px solid #D7E8FF;">'
+            f'{escape(title)}</div>'
+        )
+    html += '<table class="static-table">'
+
+    # Headers
+    html += "<thead><tr>"
+    for col in to_display.columns:
+        html += f"<th>{escape(str(col))}</th>"
+    html += "</tr></thead><tbody>"
+
+    # Rows
+    for _, row in to_display.iterrows():
+        html += "<tr>"
+        for col in to_display.columns:
+            val = str(row[col])
+            td_class = ' class="long-text"' if len(val) > 40 else ""
+            html += f"<td{td_class}>{escape(val)}</td>"
+        html += "</tr>"
+    html += "</tbody></table></div>"
+    st.markdown(html, unsafe_allow_html=True)
+
+
 def donut_chart(
     counts: pd.Series,
     title: str,
@@ -4213,11 +4517,23 @@ def render_fullscreen_dialog() -> None:
 
     st.markdown(f"#### {escape(chart['title'])}")
     enlarged = go.Figure(chart["figure"])
+    
+    # Check if all y-values in the chart traces are integers to prevent fractional tick labels on zoom
+    y_vals = []
+    for trace in enlarged.data:
+        if hasattr(trace, "y") and trace.y is not None:
+            y_vals.extend([v for v in trace.y if pd.notna(v)])
+    
     enlarged.update_layout(
         autosize=True,
-        height=600,
+        height=500,
+        title=None,  # Clear the title from the figure layout to avoid double titles
         margin={"l": 55, "r": 35, "t": 28, "b": 65},
     )
+    
+    if y_vals and all(isinstance(v, (int, np.integer)) or (isinstance(v, float) and v.is_integer()) for v in y_vals):
+        enlarged.update_yaxes(tickformat="d")
+
     # Fullscreen dialog: enable scroll zoom and pan for exploration
     enlarged.update_layout(dragmode="zoom")
     enlarged.update_xaxes(fixedrange=False)
@@ -4326,22 +4642,42 @@ def render_sidebar_nav() -> None:
 
 
 def render_horizontal_tabs() -> None:
-    with st.container(key="horizontal_navigation"):
-        columns = st.columns(len(NAV_ITEMS))
-        for column, (tab_name, _) in zip(columns, NAV_ITEMS):
-            with column:
-                if st.button(
-                    tab_name,
-                    key=f"horizontal_nav_{tab_name}",
-                    type=(
-                        "primary"
-                        if st.session_state.get("active_tab") == tab_name
-                        else "secondary"
-                    ),
-                    width="stretch",
-                ):
-                    st.session_state.active_tab = tab_name
-                    st.rerun()
+    # Desktop Navigation View
+    with st.container(key="navigation_desktop"):
+        with st.container(key="horizontal_navigation"):
+            columns = st.columns(len(NAV_ITEMS))
+            for column, (tab_name, _) in zip(columns, NAV_ITEMS):
+                with column:
+                    if st.button(
+                        tab_name,
+                        key=f"horizontal_nav_{tab_name}",
+                        type=(
+                            "primary"
+                            if st.session_state.get("active_tab") == tab_name
+                            else "secondary"
+                        ),
+                        width="stretch",
+                    ):
+                        st.session_state.active_tab = tab_name
+                        st.rerun()
+
+    # Mobile Navigation View (Dropdown section switcher, space saving & clean)
+    with st.container(key="navigation_mobile"):
+        nav_names = [item[0] for item in NAV_ITEMS]
+        current_active = st.session_state.get("active_tab", "Overview")
+        if current_active not in nav_names:
+            current_active = nav_names[0]
+            
+        selected_tab = st.selectbox(
+            "Pilih Halaman",
+            options=nav_names,
+            index=nav_names.index(current_active),
+            key="mobile_navigation_selectbox",
+            label_visibility="collapsed",
+        )
+        if selected_tab != current_active:
+            st.session_state.active_tab = selected_tab
+            st.rerun()
 
 
 @st.dialog("Filter & Control", width="large")
@@ -5022,13 +5358,68 @@ def render_top_header(
     defaults: dict[str, Any] | None = None,
 ) -> None:
     search_query = ""
-    with st.container(key="top_header"):
-        filter_column, brand_column, search_column, status_column, refresh_column = st.columns(
-            [1.0, 2.6, 2.4, 2.8, 0.8],
-            vertical_alignment="center",
-        )
-        with filter_column:
-            # Check if any filter is active to change button appearance
+    
+    # Desktop Header View
+    with st.container(key="top_header_desktop"):
+        with st.container(key="top_header"):
+            filter_column, brand_column, search_column, status_column, refresh_column = st.columns(
+                [1.0, 2.6, 2.4, 2.8, 0.8],
+                vertical_alignment="center",
+            )
+            with filter_column:
+                active_filters = st.session_state.get("active_filters", {})
+                _defaults = defaults or {}
+                filter_is_active = any(
+                    active_filters.get(k) != _defaults.get(k)
+                    for k in ("gender", "age", "frequency", "rating", "sentiment", "keyword")
+                )
+                filter_btn_label = "☰ Filter ●" if filter_is_active else "☰ Filter"
+                if st.button(
+                    filter_btn_label,
+                    key="open_filter_dialog_btn",
+                    type="primary" if filter_is_active else "secondary",
+                    width="stretch",
+                ):
+                    if options is not None and defaults is not None:
+                        render_filter_dialog(options, defaults)
+            with brand_column:
+                st.markdown(
+                    f"""
+                    <div style="display:flex;align-items:center;gap:.6rem;min-height:38px;">
+                        <div class="brand-logo-wrap">
+                            {dana_logo_html(30)}
+                        </div>
+                        <div>
+                            <div style="color:#07132F;font-weight:800;font-size:.9rem;line-height:1.15;">DANA Insight Command Center</div>
+                            <div style="color:#94A3B8;font-size:.68rem;margin-top:.12rem;">Survey &amp; Review Analytics &mdash; Fintech Experience Dashboard</div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            with search_column:
+                search_query = st.text_input(
+                    "Pencarian global",
+                    key="global_search_query",
+                    placeholder="Cari indikator atau kata ulasan...",
+                    label_visibility="collapsed",
+                )
+            with status_column:
+                render_live_header(cache_refresh, data_updated, loaded)
+            with refresh_column:
+                if st.button(
+                    "Refresh",
+                    key="top_refresh_btn",
+                    width="stretch",
+                ):
+                    st.cache_data.clear()
+                    st.session_state.last_refresh = datetime.now(WIB)
+                    st.rerun()
+
+    # Mobile Header View (Compact, centered logo, no search box, touch-optimized)
+    with st.container(key="top_header_mobile"):
+        col_filter, col_logo, col_refresh = st.columns([1.2, 2.0, 1.2], vertical_alignment="center")
+        with col_filter:
             active_filters = st.session_state.get("active_filters", {})
             _defaults = defaults or {}
             filter_is_active = any(
@@ -5038,51 +5429,44 @@ def render_top_header(
             filter_btn_label = "☰ Filter ●" if filter_is_active else "☰ Filter"
             if st.button(
                 filter_btn_label,
-                key="open_filter_dialog_btn",
+                key="open_filter_dialog_btn_mobile",
                 type="primary" if filter_is_active else "secondary",
                 width="stretch",
             ):
                 if options is not None and defaults is not None:
                     render_filter_dialog(options, defaults)
-        with brand_column:
-            st.markdown(
-                f"""
-                <div style="display:flex;align-items:center;gap:.6rem;min-height:38px;">
-                    <div class="brand-logo-wrap">
-                        {dana_logo_html(30)}
-                    </div>
-                    <div>
-                        <div style="color:#07132F;font-weight:800;font-size:.9rem;line-height:1.15;">DANA Insight Command Center</div>
-                        <div style="color:#94A3B8;font-size:.68rem;margin-top:.12rem;">Survey &amp; Review Analytics &mdash; Fintech Experience Dashboard</div>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
+        with col_logo:
+            st.html(
+                f'<div style="display:flex;justify-content:center;align-items:center;height:38px;">'
+                f'{dana_logo_html(24)}'
+                f'</div>'
             )
-        with search_column:
-            search_query = st.text_input(
-                "Pencarian global",
-                key="global_search_query",
-                placeholder="Cari indikator atau kata ulasan...",
-                label_visibility="collapsed",
-            )
-        with status_column:
-            render_live_header(cache_refresh, data_updated, loaded)
-        with refresh_column:
+        with col_refresh:
             if st.button(
                 "Refresh",
-                key="top_refresh_btn",
+                key="top_refresh_btn_mobile",
                 width="stretch",
             ):
                 st.cache_data.clear()
                 st.session_state.last_refresh = datetime.now(WIB)
                 st.rerun()
-    render_global_search_results(
-        search_query,
-        questionnaire,
-        reviews,
-        review_columns,
-    )
+        
+        # Simplified live status indicator underneath
+        st.html(
+            f'<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:6px;padding:2px 0;">'
+            f'<span style="font-size:0.68rem;color:#16C784;background:#ECFDF5;padding:2px 6px;border-radius:6px;font-weight:700;">● Data Loaded</span>'
+            f'<span style="font-size:0.68rem;color:#5C6B86;font-family:monospace;">WIB: {datetime.now(WIB).strftime("%H:%M:%S")}</span>'
+            f'</div>'
+        )
+
+    # Perform global search calculations if search query is provided
+    if search_query:
+        render_global_search_results(
+            search_query,
+            questionnaire,
+            reviews,
+            review_columns,
+        )
 
 
 
@@ -5761,108 +6145,110 @@ def render_overview(
     # Insight highlight chips — always shown for quick overview
     insight_highlight_cards(survey, survey_columns, reviews, review_columns)
 
-    summary_columns = st.columns(4)
-    values = [
-        ("Mayoritas Responden", gender_text, "berdasarkan data yang tampil"),
-        ("Frekuensi Terbanyak", frequency_text, "pola penggunaan dominan"),
-        ("Rating Rata-rata", f"{metrics['avg_rating']:.2f} / 5", "hasil ulasan pengguna"),
-        ("Sentimen Dominan", dominant_sentiment, "berdasarkan rating"),
-    ]
-    for column, item in zip(summary_columns, values):
-        with column:
-            st.markdown(summary_card(*item), unsafe_allow_html=True)
+    with st.container(key="layout_overview_summary"):
+        summary_columns = st.columns(4)
+        values = [
+            ("Mayoritas Responden", gender_text, "berdasarkan data yang tampil"),
+            ("Frekuensi Terbanyak", frequency_text, "pola penggunaan dominan"),
+            ("Rating Rata-rata", f"{metrics['avg_rating']:.2f} / 5", "hasil ulasan pengguna"),
+            ("Sentimen Dominan", dominant_sentiment, "berdasarkan rating"),
+        ]
+        for column, item in zip(summary_columns, values):
+            with column:
+                st.markdown(summary_card(*item), unsafe_allow_html=True)
 
-
-    left, right = st.columns(2)
-    with left:
-        with st.container(key="chart_overview_gender", border=True):
-            if not has_data(survey):
-                render_empty_state("Tidak ada data survei", "Silakan reset atau ubah kombinasi filter.")
-            else:
-                gender_column = survey_columns.get("gender")
-                if gender_column in survey.columns:
-                    counts = survey[gender_column].value_counts()
-                    plot_chart(
-                        donut_chart(
-                            counts,
-                            "Distribusi Gender Responden",
-                            {"Perempuan": C_PRIMARY, "Laki-laki": C_SKY},
-                            survey_scope,
-                            "responden",
-                        ),
-                        "overview_gender",
-                    )
-                    st.caption("Proporsi gender responden pada data yang sedang ditampilkan.")
+    with st.container(key="layout_overview_charts1"):
+        left, right = st.columns(2)
+        with left:
+            with st.container(key="chart_overview_gender", border=True):
+                if not has_data(survey):
+                    render_empty_state("Tidak ada data survei", "Silakan reset atau ubah kombinasi filter.")
                 else:
-                    st.info("Kolom gender tidak tersedia.")
-    with right:
-        with st.container(key="chart_overview_frequency", border=True):
-            if not has_data(survey):
-                render_empty_state("Tidak ada data survei", "Silakan reset atau ubah kombinasi filter.")
-            else:
-                frequency_column = survey_columns.get("frequency")
-                if frequency_column in survey.columns:
-                    counts = survey[frequency_column].value_counts()
-                    plot_chart(
-                        bar_chart(
-                            counts.index.tolist(),
-                            counts.values.tolist(),
-                            "Frekuensi Penggunaan DANA",
-                            C_PRIMARY,
-                            denominator=len(survey),
-                            scope_label=survey_scope,
-                            unit_label="responden",
-                        ),
-                        "overview_frequency",
-                    )
-                    st.caption("Jumlah responden menurut intensitas penggunaan DANA.")
-                else:
-                    st.info("Kolom frekuensi penggunaan tidak tersedia.")
-
-    left, right = st.columns(2)
-    with left:
-        with st.container(key="chart_overview_age", border=True):
-            if not has_data(survey):
-                render_empty_state("Tidak ada data survei", "Silakan reset atau ubah kombinasi filter.")
-            else:
-                age_column = survey_columns.get("age")
-                if age_column in survey.columns:
-                    counts = survey[age_column].value_counts()
-                    ordered_labels = sorted(counts.index.tolist(), key=age_sort_key)
-                    ordered_values = [int(counts[label]) for label in ordered_labels]
-                    plot_chart(
-                        bar_chart(
-                            ordered_labels,
-                            ordered_values,
-                            "Distribusi Kelompok Usia",
-                            C_ELECTRIC,
-                            denominator=len(survey),
-                            scope_label=survey_scope,
-                            unit_label="responden",
-                        ),
-                        "overview_age",
-                    )
-                    st.caption("Usia ditampilkan sebagai kelompok sesuai format dataset.")
-                else:
-                    st.info("Kolom kelompok usia tidak tersedia.")
-    with right:
-        with st.container(key="chart_overview_trend", border=True):
-            if not has_data(reviews):
-                render_empty_state("Tidak ada data ulasan", "Silakan reset atau ubah kombinasi filter.")
-            else:
-                date_column = review_columns.get("date")
-                if date_column in reviews.columns:
-                    fig = review_trend_chart(reviews, date_column, review_scope)
-                    if fig.data:
-                        plot_chart(fig, "overview_trend")
-                        st.caption(
-                            "Volume ulasan dikelompokkan berdasarkan tanggal kalender, "
-                            "bukan jam."
+                    gender_column = survey_columns.get("gender")
+                    if gender_column in survey.columns:
+                        counts = survey[gender_column].value_counts()
+                        plot_chart(
+                            donut_chart(
+                                counts,
+                                "Distribusi Gender Responden",
+                                {"Perempuan": C_PRIMARY, "Laki-laki": C_SKY},
+                                survey_scope,
+                                "responden",
+                            ),
+                            "overview_gender",
                         )
+                        st.caption("Proporsi gender responden pada data yang sedang ditampilkan.")
                     else:
-                        st.info("Tanggal ulasan tidak valid untuk membuat tren.")
+                        st.info("Kolom gender tidak tersedia.")
+        with right:
+            with st.container(key="chart_overview_frequency", border=True):
+                if not has_data(survey):
+                    render_empty_state("Tidak ada data survei", "Silakan reset atau ubah kombinasi filter.")
                 else:
-                    st.info("Kolom tanggal ulasan tidak tersedia.")
+                    frequency_column = survey_columns.get("frequency")
+                    if frequency_column in survey.columns:
+                        counts = survey[frequency_column].value_counts()
+                        plot_chart(
+                            bar_chart(
+                                counts.index.tolist(),
+                                counts.values.tolist(),
+                                "Frekuensi Penggunaan DANA",
+                                C_PRIMARY,
+                                denominator=len(survey),
+                                scope_label=survey_scope,
+                                unit_label="responden",
+                            ),
+                            "overview_frequency",
+                        )
+                        st.caption("Jumlah responden menurut intensitas penggunaan DANA.")
+                    else:
+                        st.info("Kolom frekuensi penggunaan tidak tersedia.")
+
+    with st.container(key="layout_overview_charts2"):
+        left, right = st.columns(2)
+        with left:
+            with st.container(key="chart_overview_age", border=True):
+                if not has_data(survey):
+                    render_empty_state("Tidak ada data survei", "Silakan reset atau ubah kombinasi filter.")
+                else:
+                    age_column = survey_columns.get("age")
+                    if age_column in survey.columns:
+                        counts = survey[age_column].value_counts()
+                        ordered_labels = sorted(counts.index.tolist(), key=age_sort_key)
+                        ordered_values = [int(counts[label]) for label in ordered_labels]
+                        plot_chart(
+                            bar_chart(
+                                ordered_labels,
+                                ordered_values,
+                                "Distribusi Kelompok Usia",
+                                C_ELECTRIC,
+                                denominator=len(survey),
+                                scope_label=survey_scope,
+                                unit_label="responden",
+                            ),
+                            "overview_age",
+                        )
+                        st.caption("Usia ditampilkan sebagai kelompok sesuai format dataset.")
+                    else:
+                        st.info("Kolom kelompok usia tidak tersedia.")
+        with right:
+            with st.container(key="chart_overview_trend", border=True):
+                if not has_data(reviews):
+                    render_empty_state("Tidak ada data ulasan", "Silakan reset atau ubah kombinasi filter.")
+                else:
+                    date_column = review_columns.get("date")
+                    if date_column in reviews.columns:
+                        fig = review_trend_chart(reviews, date_column, review_scope)
+                        if fig.data:
+                            plot_chart(fig, "overview_trend")
+                            st.caption(
+                                "Volume ulasan dikelompokkan berdasarkan tanggal kalender, "
+                                "bukan jam."
+                            )
+                        else:
+                            st.info("Tanggal ulasan tidak valid untuk membuat tren.")
+                    else:
+                        st.info("Kolom tanggal ulasan tidak tersedia.")
 
 
 def health_card(
@@ -5942,15 +6328,16 @@ def render_survey_analysis(
         & categorized["rata_rata"].lt(4)
     ]
     weak = categorized[categorized["rata_rata"].lt(3)]
-    columns = st.columns(3)
-    cards = [
-        ("Indikator Kuat / Baik", len(strong), "Skor >= 4.00", C_POSITIVE, C_SOFT_GREEN, "#A7F3D0"),
-        ("Indikator Cukup", len(moderate), "Skor 3.00-3.99", C_NEUTRAL, C_SOFT_AMBER, "#FDE68A"),
-        ("Perlu Perhatian", len(weak), "Skor < 3.00", C_NEGATIVE, C_SOFT_RED, "#FECACA"),
-    ]
-    for column, card in zip(columns, cards):
-        with column:
-            st.markdown(health_card(*card), unsafe_allow_html=True)
+    with st.container(key="layout_survey_health"):
+        columns = st.columns(3)
+        cards = [
+            ("Indikator Kuat / Baik", len(strong), "Skor >= 4.00", C_POSITIVE, C_SOFT_GREEN, "#A7F3D0"),
+            ("Indikator Cukup", len(moderate), "Skor 3.00-3.99", C_NEUTRAL, C_SOFT_AMBER, "#FDE68A"),
+            ("Perlu Perhatian", len(weak), "Skor < 3.00", C_NEGATIVE, C_SOFT_RED, "#FECACA"),
+        ]
+        for column, card in zip(columns, cards):
+            with column:
+                st.markdown(health_card(*card), unsafe_allow_html=True)
 
     section_heading(
         "Research Variables",
@@ -6010,37 +6397,38 @@ def render_survey_analysis(
                     "batas cukup dan kuat."
                 )
 
-    left, right = st.columns(2)
-    with left:
-        with st.container(key="panel_survey_top", border=True):
-            st.markdown("#### Top 5 indikator tertinggi")
-            for rank, row in enumerate(
-                categorized.nlargest(5, "rata_rata").itertuples(), start=1
-            ):
-                st.html(
-                    rank_card(
-                        rank,
-                        str(row.label),
-                        str(row.pertanyaan),
-                        float(row.rata_rata),
-                        True,
+    with st.container(key="layout_survey_ranks"):
+        left, right = st.columns(2)
+        with left:
+            with st.container(key="panel_survey_top", border=True):
+                st.markdown("#### Top 5 indikator tertinggi")
+                for rank, row in enumerate(
+                    categorized.nlargest(5, "rata_rata").itertuples(), start=1
+                ):
+                    st.html(
+                        rank_card(
+                            rank,
+                            str(row.label),
+                            str(row.pertanyaan),
+                            float(row.rata_rata),
+                            True,
+                        )
                     )
-                )
-    with right:
-        with st.container(key="panel_survey_bottom", border=True):
-            st.markdown("#### Bottom 5 indikator terendah")
-            for rank, row in enumerate(
-                categorized.nsmallest(5, "rata_rata").itertuples(), start=1
-            ):
-                st.html(
-                    rank_card(
-                        rank,
-                        str(row.label),
-                        str(row.pertanyaan),
-                        float(row.rata_rata),
-                        False,
+        with right:
+            with st.container(key="panel_survey_bottom", border=True):
+                st.markdown("#### Bottom 5 indikator terendah")
+                for rank, row in enumerate(
+                    categorized.nsmallest(5, "rata_rata").itertuples(), start=1
+                ):
+                    st.html(
+                        rank_card(
+                            rank,
+                            str(row.label),
+                            str(row.pertanyaan),
+                            float(row.rata_rata),
+                            False,
+                        )
                     )
-                )
 
     average = safe_mean(categorized["rata_rata"])
     best = categorized.loc[categorized["rata_rata"].idxmax()]
@@ -6065,20 +6453,54 @@ def render_survey_analysis(
     with st.expander("Daftar lengkap Q1-Q20"):
         full = categorized[["label", "pertanyaan", "rata_rata", "kategori"]].copy()
         full["rata_rata"] = full["rata_rata"].round(2)
-        st.dataframe(
-            full,
-            width="stretch",
-            height=500,
-            hide_index=True,
-            column_config={
-                "label": st.column_config.TextColumn("Kode", width="small"),
-                "pertanyaan": st.column_config.TextColumn("Pertanyaan", width="large"),
-                "rata_rata": st.column_config.NumberColumn(
-                    "Rata-rata", format="%.2f", width="small"
-                ),
-                "kategori": st.column_config.TextColumn("Interpretasi", width="medium"),
-            },
-        )
+        
+        with st.container(key="survey_q1_q20_desktop"):
+            st.dataframe(
+                full,
+                width="stretch",
+                height=500,
+                hide_index=True,
+                column_config={
+                    "label": st.column_config.TextColumn("Kode", width="small"),
+                    "pertanyaan": st.column_config.TextColumn("Pertanyaan", width="large"),
+                    "rata_rata": st.column_config.NumberColumn(
+                        "Rata-rata", format="%.2f", width="small"
+                    ),
+                    "kategori": st.column_config.TextColumn("Interpretasi", width="medium"),
+                },
+            )
+            
+        with st.container(key="survey_q1_q20_mobile"):
+            cards_html = '<div class="mobile-card-list">'
+            for _, row in full.iterrows():
+                r_val = float(row["rata_rata"])
+                k_val = str(row["kategori"])
+                q_lbl = str(row["label"])
+                q_txt = str(row["pertanyaan"])
+                
+                # Determine colors based on category/score
+                if r_val >= 4.0:
+                    badge_color = "#16C784"
+                    badge_bg = "#ECFDF5"
+                elif r_val >= 3.0:
+                    badge_color = "#FFB020"
+                    badge_bg = "#FFFBEB"
+                else:
+                    badge_color = "#FF4D5E"
+                    badge_bg = "#FEF2F2"
+                    
+                cards_html += f"""
+                <div class="mobile-card-item" style="border: 1px solid #D7E8FF; border-radius: 12px; padding: 10px; margin-bottom: 8px; background: white;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:0.85rem; font-weight:700; color:#0B5ED7;">{escape(q_lbl)}</span>
+                        <span style="font-size:0.75rem; font-weight:700; color:{badge_color}; background:{badge_bg}; padding:2px 6px; border-radius:6px;">★ {r_val:.2f}</span>
+                    </div>
+                    <div style="font-size:0.8rem; color:#102040; margin-bottom:4px; line-height:1.3; white-space:normal;">{escape(q_txt)}</div>
+                    <div style="font-size:0.7rem; color:#5C6B86;">Kategori: <strong style="color:{badge_color};">{escape(k_val)}</strong></div>
+                </div>
+                """
+            cards_html += '</div>'
+            st.markdown(cards_html, unsafe_allow_html=True)
 
 
 def render_keyword_chips(keywords: list[tuple[str, int]]) -> None:
@@ -6164,7 +6586,7 @@ def render_paginated_table(
             f"| Halaman {current_page} dari {total_pages}"
         )
 
-    with st.container(key=f"table_card_{key_prefix}"):
+    with st.container(key=f"table_card_{key_prefix}_desktop"):
         st.dataframe(
             displayed,
             width="stretch",
@@ -6172,6 +6594,51 @@ def render_paginated_table(
             hide_index=True,
             column_config=column_config,
         )
+
+    with st.container(key=f"table_card_{key_prefix}_mobile"):
+        from html import escape
+        cards_html = '<div class="mobile-card-list">'
+        for _, row in displayed.iterrows():
+            cards_html += '<div class="mobile-card-item">'
+            rating_field = next((c for c in displayed.columns if "rating" in c.lower()), None)
+            sentiment_field = next((c for c in displayed.columns if "sentimen" in c.lower()), None)
+            date_field = next((c for c in displayed.columns if "tanggal" in c.lower() or "date" in c.lower()), None)
+            text_field = next((c for c in displayed.columns if "ulasan" in c.lower() or "review" in c.lower()), None)
+
+            if rating_field or text_field:
+                r_val = row[rating_field] if rating_field else "-"
+                s_val = str(row[sentiment_field]) if sentiment_field else "-"
+                d_val = str(row[date_field]) if date_field else "-"
+                t_val = str(row[text_field]) if text_field else "-"
+                s_color = "#10B981" if "positif" in s_val.lower() else ("#EF4444" if "negatif" in s_val.lower() else "#F59E0B")
+                s_bg = "#ECFDF5" if "positif" in s_val.lower() else ("#FEF2F2" if "negatif" in s_val.lower() else "#FFFBEB")
+                cards_html += f"""
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:0.75rem; color:#64748B; font-weight:600;">{escape(d_val)}</span>
+                    <div style="display:flex; gap:4px;">
+                        <span style="font-size:0.7rem; font-weight:700; color:{s_color}; background:{s_bg}; padding:2px 6px; border-radius:6px;">{escape(s_val)}</span>
+                        <span style="font-size:0.7rem; font-weight:700; color:#0B5ED7; background:#EAF5FF; padding:2px 6px; border-radius:6px;">★ {r_val}</span>
+                    </div>
+                </div>
+                <div style="font-size:0.8rem; color:#102040; line-height:1.4; white-space:normal; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
+                    {escape(t_val)}
+                </div>
+                """
+            else:
+                item_count = 0
+                for col in displayed.columns:
+                    if col == "No":
+                        continue
+                    val = str(row[col])
+                    if val and val != "nan" and val != "-":
+                        if item_count == 0:
+                            cards_html += f'<div style="font-weight:800; color:#07132F; font-size:0.85rem; margin-bottom:4px;">{escape(col)}: {escape(val)}</div>'
+                        else:
+                            cards_html += f'<div style="font-size:0.75rem; color:#475569; margin-bottom:2px;">{escape(col)}: <strong style="color:#102040;">{escape(val)}</strong></div>'
+                        item_count += 1
+            cards_html += '</div>'
+        cards_html += '</div>'
+        st.markdown(cards_html, unsafe_allow_html=True)
 
     previous, page_status, next_page = st.columns([1, 2, 1])
     with previous:
@@ -6224,17 +6691,18 @@ def render_review_analysis(
     else:
         st.info(f"Menampilkan seluruh **{review_total} ulasan**.")
 
-    metric_columns = st.columns(5)
-    metric_values = [
-        ("Total Ulasan", f"{metrics['total']:,}", "hasil filter aktif"),
-        ("Positif", f"{metrics['positive']:,}", f"{metrics['positive_pct']:.1f}%"),
-        ("Netral", f"{metrics['neutral']:,}", "rating 3"),
-        ("Negatif", f"{metrics['negative']:,}", "rating 1-2"),
-        ("Rata-rata Rating", f"{metrics['avg_rating']:.2f}", "dari 5"),
-    ]
-    for column, item in zip(metric_columns, metric_values):
-        with column:
-            st.markdown(summary_card(*item), unsafe_allow_html=True)
+    with st.container(key="layout_review_summary"):
+        metric_columns = st.columns(5)
+        metric_values = [
+            ("Total Ulasan", f"{metrics['total']:,}", "hasil filter aktif"),
+            ("Positif", f"{metrics['positive']:,}", f"{metrics['positive_pct']:.1f}%"),
+            ("Netral", f"{metrics['neutral']:,}", "rating 3"),
+            ("Negatif", f"{metrics['negative']:,}", "rating 1-2"),
+            ("Rata-rata Rating", f"{metrics['avg_rating']:.2f}", "dari 5"),
+        ]
+        for column, item in zip(metric_columns, metric_values):
+            with column:
+                st.markdown(summary_card(*item), unsafe_allow_html=True)
 
     review_column = review_columns.get("review")
     st.markdown("#### Keyword yang sering muncul")
@@ -6243,58 +6711,59 @@ def render_review_analysis(
     else:
         st.info("Kolom teks ulasan tidak tersedia.")
 
-    left, right = st.columns(2)
-    with left:
-        with st.container(key="chart_review_sentiment", border=True):
-            counts = reviews["sentimen"].value_counts()
-            plot_chart(
-                donut_chart(
-                    counts,
-                    "Distribusi Sentimen",
-                    {
-                        "Positif": C_POSITIVE,
-                        "Netral": C_NEUTRAL,
-                        "Negatif": C_NEGATIVE,
-                    },
-                    scope_label,
-                    "ulasan",
-                ),
-                "review_sentiment",
-            )
-            st.caption("Sentimen diturunkan dari rating: 4-5 positif, 3 netral, 1-2 negatif.")
-    with right:
-        with st.container(key="chart_review_rating", border=True):
-            rating_column = review_columns.get("rating")
-            if rating_column and rating_column in reviews.columns:
-                counts = (
-                    reviews[rating_column]
-                    .dropna()
-                    .astype(int)
-                    .value_counts()
-                    .reindex([1, 2, 3, 4, 5], fill_value=0)
-                )
-                colors = [
-                    C_NEGATIVE,
-                    "#F87171",
-                    C_NEUTRAL,
-                    "#34D399",
-                    C_POSITIVE,
-                ]
+    with st.container(key="layout_review_charts"):
+        left, right = st.columns(2)
+        with left:
+            with st.container(key="chart_review_sentiment", border=True):
+                counts = reviews["sentimen"].value_counts()
                 plot_chart(
-                    bar_chart(
-                        [f"Rating {rating}" for rating in counts.index],
-                        counts.values.tolist(),
-                        "Distribusi Rating",
-                        colors,
-                        denominator=len(reviews),
-                        scope_label=scope_label,
-                        unit_label="ulasan",
+                    donut_chart(
+                        counts,
+                        "Distribusi Sentimen",
+                        {
+                            "Positif": C_POSITIVE,
+                            "Netral": C_NEUTRAL,
+                            "Negatif": C_NEGATIVE,
+                        },
+                        scope_label,
+                        "ulasan",
                     ),
-                    "review_rating",
+                    "review_sentiment",
                 )
-                st.caption("Sebaran rating lengkap pada data ulasan yang tampil.")
-            else:
-                st.info("Kolom rating tidak tersedia.")
+                st.caption("Sentimen diturunkan dari rating: 4-5 positif, 3 netral, 1-2 negatif.")
+        with right:
+            with st.container(key="chart_review_rating", border=True):
+                rating_column = review_columns.get("rating")
+                if rating_column and rating_column in reviews.columns:
+                    counts = (
+                        reviews[rating_column]
+                        .dropna()
+                        .astype(int)
+                        .value_counts()
+                        .reindex([1, 2, 3, 4, 5], fill_value=0)
+                    )
+                    colors = [
+                        C_NEGATIVE,
+                        "#F87171",
+                        C_NEUTRAL,
+                        "#34D399",
+                        C_POSITIVE,
+                    ]
+                    plot_chart(
+                        bar_chart(
+                            [f"Rating {rating}" for rating in counts.index],
+                            counts.values.tolist(),
+                            "Distribusi Rating",
+                            colors,
+                            denominator=len(reviews),
+                            scope_label=scope_label,
+                            unit_label="ulasan",
+                        ),
+                        "review_rating",
+                    )
+                    st.caption("Sebaran rating lengkap pada data ulasan yang tampil.")
+                else:
+                    st.info("Kolom rating tidak tersedia.")
 
     with st.container(key="chart_review_trend", border=True):
         date_column = review_columns.get("date")
@@ -6400,25 +6869,26 @@ def explorer_table_view(
     if frame.empty:
         return frame.copy()
     columns = [str(column) for column in frame.columns]
-    control_search, control_sort, control_order = st.columns([1.5, 1, 0.8])
-    with control_search:
-        query = st.text_input(
-            "Cari dalam tabel",
-            key=f"{key_prefix}_search",
-            placeholder="Pencarian literal, bukan regex",
-        ).strip()
-    with control_sort:
-        sort_column = st.selectbox(
-            "Urutkan kolom",
-            options=["Tanpa sorting", *columns],
-            key=f"{key_prefix}_sort_column",
-        )
-    with control_order:
-        sort_order = st.selectbox(
-            "Urutan",
-            options=["Naik", "Turun"],
-            key=f"{key_prefix}_sort_order",
-        )
+    with st.container(key=f"layout_explorer_controls_{key_prefix}"):
+        control_search, control_sort, control_order = st.columns([1.5, 1, 0.8])
+        with control_search:
+            query = st.text_input(
+                "Cari dalam tabel",
+                key=f"{key_prefix}_search",
+                placeholder="Pencarian literal, bukan regex",
+            ).strip()
+        with control_sort:
+            sort_column = st.selectbox(
+                "Urutkan kolom",
+                options=["Tanpa sorting", *columns],
+                key=f"{key_prefix}_sort_column",
+            )
+        with control_order:
+            sort_order = st.selectbox(
+                "Urutan",
+                options=["Naik", "Turun"],
+                key=f"{key_prefix}_sort_order",
+            )
 
     result = frame.copy()
     if query:
@@ -6492,19 +6962,48 @@ def render_data_explorer(
         "Rekonsiliasi",
         "Status",
     ]
-    with st.container(key="audit_metadata_card"):
-        st.dataframe(
-            audit_frame[
-                [
-                    column
-                    for column in safe_audit_columns
-                    if column in audit_frame.columns
-                ]
-            ],
-            width="stretch",
-            hide_index=True,
-            height=260,
-        )
+    with st.container(key="audit_metadata_desktop"):
+        with st.container(key="audit_metadata_card"):
+            st.dataframe(
+                audit_frame[
+                    [
+                        column
+                        for column in safe_audit_columns
+                        if column in audit_frame.columns
+                    ]
+                ],
+                width="stretch",
+                hide_index=True,
+                height=260,
+            )
+            
+    with st.container(key="audit_metadata_mobile"):
+        from html import escape
+        cards_html = '<div class="mobile-card-list">'
+        for _, row in audit_frame.iterrows():
+            sumber = str(row.get("Sumber", "-"))
+            status = str(row.get("Status", "-"))
+            peran = str(row.get("Peran", "-"))
+            baris = str(row.get("Baris", "-"))
+            kolom = str(row.get("Kolom", "-"))
+            identitas = str(row.get("Kolom Identitas", "-"))
+            
+            status_color = "#16C784" if "valid" in status.lower() or "aman" in status.lower() else "#FFB020"
+            status_bg = "#ECFDF5" if "valid" in status.lower() or "aman" in status.lower() else "#FFFBEB"
+            
+            cards_html += f"""
+            <div class="mobile-card-item" style="border: 1px solid #D7E8FF; border-radius: 12px; padding: 10px; margin-bottom: 8px; background: white;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:0.8rem; font-weight:700; color:#07132F;">{escape(sumber)}</span>
+                    <span style="font-size:0.7rem; font-weight:700; color:{status_color}; background:{status_bg}; padding:2px 6px; border-radius:6px;">{escape(status)}</span>
+                </div>
+                <div style="font-size:0.75rem; color:#475569; margin-bottom:2px;">Peran: <strong style="color:#102040;">{escape(peran)}</strong></div>
+                <div style="font-size:0.75rem; color:#475569; margin-bottom:2px;">Dimensi: <strong style="color:#102040;">{escape(baris)} Baris x {escape(kolom)} Kolom</strong></div>
+                <div style="font-size:0.75rem; color:#475569;">Kolom Identitas: <strong style="color:#FF4D5E;">{escape(identitas)}</strong></div>
+            </div>
+            """
+        cards_html += '</div>'
+        st.markdown(cards_html, unsafe_allow_html=True)
     st.caption(
         "File raw dan database hanya ditampilkan sebagai metadata. Nilai identitas "
         "tidak pernah dimuat ke tabel publik."
@@ -6657,58 +7156,83 @@ def render_output_and_presentation(
             "rating, sentimen, dan tanggal ulasan tervalidasi."
         )
 
-    intro_column, visual_column = st.columns([2.2, 0.8], vertical_alignment="center")
-    with intro_column:
-        st.markdown("#### Mode presentasi")
-        st.write(
-            "Landing visual tampil saat aplikasi dibuka. Tombol ini dapat "
-            "menampilkan kembali cover pembuka tanpa mengubah filter atau data."
-        )
-        if st.button(
-            "Tampilkan Lobi",
-            key="show_optional_lobby",
-            help="Buka cover presentasi tanpa mengubah filter atau data",
-        ):
-            go_to_landing()
-            st.rerun()
-    with visual_column:
-        mobile_visual = render_image_asset(
-            "dana_mobile_mockup_360x480.png",
-            class_name="presentation-visual",
-            alt="Preview responsif dashboard DANA Insight",
-        )
-        if mobile_visual:
-            st.html(mobile_visual)
+    with st.container(key="layout_presentation_lobby"):
+        intro_column, visual_column = st.columns([2.2, 0.8], vertical_alignment="center")
+        with intro_column:
+            st.markdown("#### Mode presentasi")
+            st.write(
+                "Landing visual tampil saat aplikasi dibuka. Tombol ini dapat "
+                "menampilkan kembali cover pembuka tanpa mengubah filter atau data."
+            )
+            if st.button(
+                "Tampilkan Lobi",
+                key="show_optional_lobby",
+                help="Buka cover presentasi tanpa mengubah filter atau data",
+            ):
+                go_to_landing()
+                st.rerun()
+        with visual_column:
+            mobile_visual = render_image_asset(
+                "dana_mobile_mockup_360x480.png",
+                class_name="presentation-visual",
+                alt="Preview responsif dashboard DANA Insight",
+            )
+            if mobile_visual:
+                st.html(mobile_visual)
 
-    st.markdown("#### Audit Sumber Data")
-    with st.container(key="output_audit_card"):
-        st.dataframe(
-            audit_frame,
-            width="stretch",
-            hide_index=True,
-            height=320,
-            column_config={
-                "Nama Kolom": st.column_config.TextColumn(
-                    "Nama Kolom",
-                    width="large",
-                ),
-                "Kolom Identitas": st.column_config.TextColumn(
-                    "Kolom Identitas",
-                    width="medium",
-                ),
-                "Status": st.column_config.TextColumn("Status", width="medium"),
-            },
-        )
-    st.caption(
-        "Audit hanya menampilkan metadata. Nilai nama responden dan username "
-        "dari file raw tidak pernah ditampilkan."
-    )
+    with st.container(key="output_audit_desktop"):
+        with st.container(key="output_audit_card"):
+            st.dataframe(
+                audit_frame,
+                width="stretch",
+                hide_index=True,
+                height=320,
+                column_config={
+                    "Nama Kolom": st.column_config.TextColumn(
+                        "Nama Kolom",
+                        width="large",
+                    ),
+                    "Kolom Identitas": st.column_config.TextColumn(
+                        "Kolom Identitas",
+                        width="medium",
+                    ),
+                    "Status": st.column_config.TextColumn("Status", width="medium"),
+                },
+            )
+            
+    with st.container(key="output_audit_mobile"):
+        from html import escape
+        cards_html = '<div class="mobile-card-list">'
+        for _, row in audit_frame.iterrows():
+            sumber = str(row.get("Sumber", "-"))
+            status = str(row.get("Status", "-"))
+            peran = str(row.get("Peran", "-"))
+            baris = str(row.get("Baris", "-"))
+            kolom = str(row.get("Kolom", "-"))
+            identitas = str(row.get("Kolom Identitas", "-"))
+            
+            status_color = "#16C784" if "valid" in status.lower() or "aman" in status.lower() else "#FFB020"
+            status_bg = "#ECFDF5" if "valid" in status.lower() or "aman" in status.lower() else "#FFFBEB"
+            
+            cards_html += f"""
+            <div class="mobile-card-item" style="border: 1px solid #D7E8FF; border-radius: 12px; padding: 10px; margin-bottom: 8px; background: white;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:0.8rem; font-weight:700; color:#07132F;">{escape(sumber)}</span>
+                    <span style="font-size:0.7rem; font-weight:700; color:{status_color}; background:{status_bg}; padding:2px 6px; border-radius:6px;">{escape(status)}</span>
+                </div>
+                <div style="font-size:0.75rem; color:#475569; margin-bottom:2px;">Peran: <strong style="color:#102040;">{escape(peran)}</strong></div>
+                <div style="font-size:0.75rem; color:#475569; margin-bottom:2px;">Dimensi: <strong style="color:#102040;">{escape(baris)} Baris x {escape(kolom)} Kolom</strong></div>
+                <div style="font-size:0.75rem; color:#475569;">Kolom Identitas: <strong style="color:#FF4D5E;">{escape(identitas)}</strong></div>
+            </div>
+            """
+        cards_html += '</div>'
+        st.markdown(cards_html, unsafe_allow_html=True)
 
     deliverables = [
         ("Dashboard Streamlit", "Tersedia melalui app.py dan siap dijalankan lokal."),
         ("Source Code", "Entry point: app.py. builder.py adalah legacy dan jangan dijalankan."),
-        ("Repository GitHub", "Belum dibuat. Pastikan data/raw_* tetap di-ignore."),
-        ("Streamlit Cloud", "Belum dideploy. Isi URL setelah deployment berhasil."),
+        ("Repository GitHub", "https://github.com/Sekolah76/dashboard-tugas"),
+        ("Streamlit Cloud", "https://dashboard-dana.streamlit.app"),
         ("Screenshot", "Ambil sepuluh tampilan utama setelah QA visual final."),
         ("Ringkasan Fitur", "Tersedia di Ringkasan_Fitur_Dashboard.txt."),
     ]
@@ -6722,24 +7246,39 @@ def render_output_and_presentation(
     )
     st.markdown(f'<div class="deliverable-grid">{cards}</div>', unsafe_allow_html=True)
 
-    st.markdown("#### Tautan publik")
-    link_left, link_right = st.columns(2)
-    with link_left:
-        st.text_input(
-            "GitHub URL",
-            key="presentation_github_url",
-            placeholder="Belum tersedia - isi setelah repository dibuat",
-        )
-    with link_right:
-        st.text_input(
-            "Streamlit Cloud URL",
-            key="presentation_streamlit_url",
-            placeholder="Belum tersedia - isi setelah deployment berhasil",
-        )
-    st.caption(
-        "Kolom ini bersifat catatan sesi dan tidak berarti repository atau "
-        "deployment sudah dibuat."
+    st.markdown("#### Bahan Flyer Presentasi")
+    st.html(
+        """
+        <div style="background:#F0F6FF; border: 1.5px solid #D7E8FF; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+            <div style="font-weight:800; color:#07132F; font-size:0.9rem; margin-bottom:8px;">💡 Panduan Bahan Flyer (Snapshot Flyer)</div>
+            <div style="font-size:0.8rem; color:#475569; line-height:1.4;">
+                <p style="margin-bottom:6px;">Tab <strong>Snapshot Flyer</strong> disediakan khusus untuk mempermudah pengambilan tangkapan layar (screenshot) sebagai bahan visual di Canva atau flyer presentasi UAS Anda.</p>
+                <ul style="margin-left:16px; margin-bottom:0;">
+                    <li>Gunakan <strong>browser zoom 80-90%</strong> untuk memuat seluruh komponen flyer dalam satu screenshot utuh.</li>
+                    <li>Gunakan <strong>laptop atau desktop</strong> untuk mendapatkan resolusi dan tata letak flyer terbaik.</li>
+                </ul>
+            </div>
+        </div>
+        """
     )
+
+    with st.container(key="layout_presentation_links"):
+        link_left, link_right = st.columns(2)
+        with link_left:
+            st.text_input(
+                "GitHub URL",
+                value="https://github.com/Sekolah76/dashboard-tugas",
+                key="presentation_github_url",
+            )
+        with link_right:
+            st.text_input(
+                "Streamlit Cloud URL",
+                value="https://dashboard-dana.streamlit.app",
+                key="presentation_streamlit_url",
+            )
+        st.caption(
+            "Kolom ini bersifat catatan sesi untuk referensi tautan publik dashboard."
+        )
 
     st.markdown("#### Daftar screenshot presentasi")
     screenshot_names = [
@@ -6761,8 +7300,28 @@ def render_output_and_presentation(
             "Status": ["Perlu diambil setelah QA visual"] * len(screenshot_names),
         }
     )
-    with st.container(key="output_screenshot_card"):
-        st.dataframe(screenshot_frame, width="stretch", hide_index=True)
+    with st.container(key="output_screenshot_desktop"):
+        with st.container(key="output_screenshot_card"):
+            st.dataframe(screenshot_frame, width="stretch", hide_index=True)
+            
+    with st.container(key="output_screenshot_mobile"):
+        from html import escape
+        cards_html = '<div class="mobile-card-list">'
+        for _, row in screenshot_frame.iterrows():
+            no = str(row.get("No", ""))
+            name = str(row.get("Nama Screenshot", ""))
+            status = str(row.get("Status", ""))
+            
+            cards_html += f"""
+            <div class="mobile-card-item" style="border: 1px solid #D7E8FF; border-radius: 12px; padding: 10px; margin-bottom: 8px; background: white;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.8rem; font-weight:700; color:#07132F;">{no}. {escape(name)}</span>
+                    <span style="font-size:0.7rem; font-weight:600; color:#5C6B86; background:#EEF2F7; padding:2px 6px; border-radius:6px;">{escape(status)}</span>
+                </div>
+            </div>
+            """
+        cards_html += '</div>'
+        st.markdown(cards_html, unsafe_allow_html=True)
 
     st.markdown("#### 📋 Ringkasan Otomatis Presentasi")
     with st.container(key="auto_summary_panel"):
@@ -6960,6 +7519,211 @@ def render_conclusion(
     )
 
 
+def render_snapshot_flyer(
+    survey: pd.DataFrame | None,
+    reviews: pd.DataFrame | None,
+    review_columns: dict[str, Any],
+    questionnaire: pd.DataFrame | None,
+    survey_columns: dict[str, Any],
+) -> None:
+    section_heading(
+        "Flyer Snapshot",
+        "Snapshot Flyer",
+        "Canva-ready & screenshot-friendly overall data flyer.",
+        "dana_mark.svg",
+    )
+
+    # Desktop View (Canva-ready layout)
+    with st.container(key="snapshot_flyer_desktop"):
+        with st.container(key="snapshot_flyer_frame_desktop"):
+            # Header Row
+            col_logo, col_title = st.columns([1, 4.2], vertical_alignment="center")
+            with col_logo:
+                st.markdown(
+                    f'<div style="display:flex;align-items:center;min-height:48px;">'
+                    f'{dana_logo_html(40)}'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+            with col_title:
+                st.markdown(
+                    f'<div style="text-align:left;">'
+                    f'<div style="color:#07132F;font-weight:900;font-size:1.6rem;line-height:1.1;">DANA Insight Command Center</div>'
+                    f'<div style="color:#5C6B86;font-size:0.8rem;font-weight:600;margin-top:2px;">Survey &amp; Review Analytics &mdash; Fintech Experience Dashboard</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+            
+            st.markdown('<div style="margin: 15px 0; border-bottom: 2px solid #D7E8FF;"></div>', unsafe_allow_html=True)
+            
+            # KPI Metrics Row (5 columns)
+            survey_count = len(survey) if survey is not None else 0
+            review_count = len(reviews) if reviews is not None else 0
+            avg_skor = (
+                safe_mean(questionnaire["rata_rata"])
+                if questionnaire is not None and not questionnaire.empty
+                else 0.0
+            )
+            metrics = review_metrics(reviews, review_columns)
+            avg_rating = metrics["avg_rating"]
+            positive_pct = metrics["positive_pct"]
+            
+            kpi_cols = st.columns(5)
+            kpis = [
+                ("Responden", f"{survey_count}", "Orang"),
+                ("Ulasan", f"{review_count}", "Ulasan"),
+                ("Rata-rata Skor", f"{avg_skor:.2f}", "/ 5.00"),
+                ("Rata-rata Rating", f"{avg_rating:.2f}", "/ 5.00"),
+                ("Sentimen Positif", f"{positive_pct:.1f}%", "Ulasan"),
+            ]
+            for col, (label, val, unit) in zip(kpi_cols, kpis):
+                with col:
+                    st.markdown(
+                        f'<div class="flyer-kpi-card">'
+                        f'<div class="flyer-kpi-label">{label}</div>'
+                        f'<div class="flyer-kpi-value">{val}</div>'
+                        f'<div style="font-size:0.6rem;color:#64748B;font-weight:600;margin-top:2px;">{unit}</div>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+            
+            # Main Layout Columns
+            col_left, col_right = st.columns([1.8, 1.2])
+            
+            with col_left:
+                # 3-column row for Gender, Age, Sentiment
+                row1_col1, row1_col2, row1_col3 = st.columns(3)
+                
+                with row1_col1:
+                    with st.container(key="flyer_chart_gender", border=True):
+                        gender_col = survey_columns.get("gender")
+                        if survey is not None and gender_col in survey.columns:
+                            g_counts = survey[gender_col].value_counts()
+                            fig = donut_chart(g_counts, "Gender", {"Perempuan": C_PRIMARY, "Laki-laki": C_SKY}, "Total data", "responden")
+                            fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10), showlegend=False)
+                            plot_chart(fig, "flyer_gender")
+                            
+                with row1_col2:
+                    with st.container(key="flyer_chart_age", border=True):
+                        age_col = survey_columns.get("age")
+                        if survey is not None and age_col in survey.columns:
+                            a_counts = survey[age_col].value_counts()
+                            ordered_labels = sorted(a_counts.index.tolist(), key=age_sort_key)
+                            ordered_values = [int(a_counts[label]) for label in ordered_labels]
+                            fig = bar_chart(ordered_labels, ordered_values, "Kelompok Usia", C_ELECTRIC, len(survey), "Total data", "responden")
+                            fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10))
+                            plot_chart(fig, "flyer_age")
+                            
+                with row1_col3:
+                    with st.container(key="flyer_chart_sentiment", border=True):
+                        if reviews is not None and "sentimen" in reviews.columns:
+                            s_counts = reviews["sentimen"].value_counts()
+                            fig = donut_chart(s_counts, "Sentimen", {"Positif": C_POSITIVE, "Netral": C_NEUTRAL, "Negatif": C_NEGATIVE}, "Total data", "ulasan")
+                            fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10), showlegend=False)
+                            plot_chart(fig, "flyer_sentiment")
+                
+                # 2-column row for Rating & Variables
+                row2_col1, row2_col2 = st.columns([1, 1.2])
+                with row2_col1:
+                    with st.container(key="flyer_chart_rating", border=True):
+                        rating_col = review_columns.get("rating")
+                        if reviews is not None and rating_col in reviews.columns:
+                            r_counts = reviews[rating_col].dropna().astype(int).value_counts().reindex([1, 2, 3, 4, 5], fill_value=0)
+                            colors = [C_NEGATIVE, "#F87171", C_NEUTRAL, "#34D399", C_POSITIVE]
+                            fig = bar_chart([f"Rating {r}" for r in r_counts.index], r_counts.values.tolist(), "Sebaran Rating", colors, len(reviews), "Total data", "ulasan")
+                            fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10))
+                            plot_chart(fig, "flyer_rating")
+                            
+                with row2_col2:
+                    with st.container(key="flyer_chart_variables", border=True):
+                        if survey is not None:
+                            vars_df, _ = compute_variable_scores(survey, survey_columns.get("questions", []))
+                            fig = variable_score_chart(vars_df, "Total data")
+                            fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10))
+                            plot_chart(fig, "flyer_variables")
+                            
+            with col_right:
+                # Insight Utama Card
+                st.markdown(
+                    f'<div class="flyer-insight-card">'
+                    f'<div class="flyer-insight-title">💡 Insight Utama</div>'
+                    f'<div class="flyer-insight-item">Profil Gender: <strong>Perempuan 78%</strong> (39 dari 50 responden)</div>'
+                    f'<div class="flyer-insight-item">Usia Dominan: Kelompok <strong>18–22 Tahun 72%</strong> (36 responden)</div>'
+                    f'<div class="flyer-insight-item">Pola Penggunaan: Intensitas <strong>Jarang 42%</strong> (21 responden)</div>'
+                    f'<div class="flyer-insight-item">Keyword Perhatian: <span style="background:#FFF1F2;color:#E11D48;font-weight:700;padding:1px 4px;border-radius:4px;">akun</span>, '
+                    f'<span style="background:#FFF1F2;color:#E11D48;font-weight:700;padding:1px 4px;border-radius:4px;">saldo</span>, '
+                    f'<span style="background:#FFF1F2;color:#E11D48;font-weight:700;padding:1px 4px;border-radius:4px;">hilang</span></div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+                
+                # Mini Ulasan List (Max 5 rows, latest)
+                st.markdown('<div style="font-size:0.75rem;font-weight:800;color:#07132F;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.03em;">💬 Ulasan Pengguna Terbaru (Terlindung)</div>', unsafe_allow_html=True)
+                if reviews is not None and not reviews.empty:
+                    date_col = review_columns.get("date")
+                    text_col = review_columns.get("review")
+                    rating_col = review_columns.get("rating")
+                    
+                    sorted_reviews = reviews.sort_values(date_col, ascending=False).head(5)
+                    for _, row in sorted_reviews.iterrows():
+                        r_val = row.get(rating_col, "-")
+                        d_val = str(row.get(date_col, "-"))
+                        t_val = str(row.get(text_col, "-"))
+                        s_val = str(row.get("sentimen", "-"))
+                        
+                        s_color = "#10B981" if "positif" in s_val.lower() else ("#EF4444" if "negatif" in s_val.lower() else "#F59E0B")
+                        s_bg = "#ECFDF5" if "positif" in s_val.lower() else ("#FEF2F2" if "negatif" in s_val.lower() else "#FFFBEB")
+                        
+                        st.markdown(
+                            f'<div class="flyer-review-card">'
+                            f'<div class="flyer-review-header">'
+                            f'<span class="flyer-review-date">{escape(d_val)}</span>'
+                            f'<div style="display:flex;gap:4px;">'
+                            f'<span style="font-size:0.6rem;font-weight:700;color:{s_color};background:{s_bg};padding:1px 4px;border-radius:4px;">{escape(s_val)}</span>'
+                            f'<span style="font-size:0.6rem;font-weight:700;color:#0B5ED7;background:#EAF5FF;padding:1px 4px;border-radius:4px;">★ {r_val}</span>'
+                            f'</div>'
+                            f'</div>'
+                            f'<div class="flyer-review-text">{escape(t_val)}</div>'
+                            f'</div>',
+                            unsafe_allow_html=True,
+                        )
+                else:
+                    st.info("Data ulasan tidak tersedia.")
+
+    # Mobile View (notice and clean simplified stats, no overflow)
+    with st.container(key="snapshot_flyer_mobile"):
+        st.info("📱 Gunakan laptop/desktop untuk screenshot flyer terbaik.")
+        
+        survey_count = len(survey) if survey is not None else 0
+        review_count = len(reviews) if reviews is not None else 0
+        metrics = review_metrics(reviews, review_columns)
+        avg_skor = (
+            safe_mean(questionnaire["rata_rata"])
+            if questionnaire is not None and not questionnaire.empty
+            else 0.0
+        )
+        avg_rating = metrics["avg_rating"]
+        positive_pct = metrics["positive_pct"]
+        
+        st.markdown('<div style="font-weight:800;color:#07132F;font-size:0.9rem;margin-bottom:8px;">Ringkasan KPI Utama</div>', unsafe_allow_html=True)
+        mobile_kpis = [
+            ("Responden Survei", f"{survey_count} Orang"),
+            ("Ulasan Pengguna", f"{review_count} Ulasan"),
+            ("Rata-rata Skor", f"{avg_skor:.2f} / 5.00"),
+            ("Rata-rata Rating", f"{avg_rating:.2f} / 5.00"),
+            ("Sentimen Positif", f"{positive_pct:.1f}%"),
+        ]
+        
+        for label, val in mobile_kpis:
+            st.markdown(
+                f'<div style="display:flex;justify-content:space-between;align-items:center;background:white;border:1px solid #D7E8FF;border-radius:8px;padding:8px 12px;margin-bottom:6px;width:100%; box-sizing:border-box;">'
+                f'<span style="font-size:0.75rem;color:#5C6B86;font-weight:600;">{label}</span>'
+                f'<span style="font-size:0.8rem;color:#108EE9;font-weight:800;margin-left:auto;font-variant-numeric:tabular-nums;">{val}</span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+
 def render_footer() -> None:
     st.html(
         """
@@ -7136,6 +7900,14 @@ def render_dashboard_content(
             review_total,
             review_columns,
             filters,
+        )
+    elif active_tab == "Snapshot Flyer":
+        render_snapshot_flyer(
+            survey,
+            reviews,
+            review_columns,
+            questionnaire_total,
+            survey_columns,
         )
     elif active_tab == "Lampiran Presentasi":
         render_output_and_presentation(audit_frame, invariant_errors)

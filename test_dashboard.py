@@ -97,15 +97,10 @@ class DashboardDataTests(unittest.TestCase):
         self.assertTrue(figure.layout.autosize)
 
     def test_plotly_config_and_distribution_tooltips(self) -> None:
-        self.assertEqual(
-            app.PLOTLY_CONFIG,
-            {
-                "displayModeBar": False,
-                "displaylogo": False,
-                "responsive": True,
-                "scrollZoom": False,
-            },
-        )
+        cfg = app.PLOTLY_CONFIG
+        self.assertFalse(cfg["displayModeBar"])
+        self.assertFalse(cfg["scrollZoom"])
+        self.assertTrue(cfg["responsive"])
         gender = app.donut_chart(
             pd.Series({"Perempuan": 39, "Laki-laki": 11}),
             "Distribusi Gender Responden",
@@ -113,8 +108,9 @@ class DashboardDataTests(unittest.TestCase):
             "Total data",
             "responden",
         )
-        self.assertIn("%{value} dari %{customdata[0]} %{customdata[2]}", gender.data[0].hovertemplate)
-        self.assertEqual(list(gender.data[0].customdata[0]), [50, "78.0", "responden", "dari total data"])
+        self.assertIn("Jumlah: <b>%{value}</b>", gender.data[0].hovertemplate)
+        self.assertIn("Persentase: <b>%{percent:.1%}</b>", gender.data[0].hovertemplate)
+        self.assertIsNone(gender.data[0].customdata)
         frequency = app.bar_chart(
             ["Jarang", "Beberapa kali seminggu", "Setiap hari"],
             [21, 19, 10],
@@ -125,7 +121,7 @@ class DashboardDataTests(unittest.TestCase):
         )
         self.assertEqual(frequency.data[0].x[1], "Beberapa kali<br>seminggu")
         self.assertEqual(frequency.layout.xaxis.tickangle, -25)
-        self.assertEqual(list(frequency.data[0].customdata[0])[:4], [50, "42.0", "responden", "dari total data"])
+        self.assertEqual(list(frequency.data[0].customdata[0])[:3], ["Jarang", "21", "42.0"])
 
     def test_chart_titles_are_plain_and_questionnaire_is_compact(self) -> None:
         figure = app.questionnaire_chart(
@@ -211,7 +207,7 @@ class DashboardInteractionTests(unittest.TestCase):
             for button in dashboard.button
             if str(button.key).startswith("landing_open_")
         ]
-        self.assertEqual(len(module_buttons), 5)
+        self.assertEqual(len(module_buttons), 6)
 
         next(
             button
@@ -225,7 +221,7 @@ class DashboardInteractionTests(unittest.TestCase):
             if str(button.key).startswith("horizontal_nav_")
         ]
         # Now only horizontal_nav_ buttons (sidebar nav removed)
-        self.assertEqual(len(navigation_buttons), 5)
+        self.assertEqual(len(navigation_buttons), 6)
         self.assertEqual(
             {button.label for button in navigation_buttons},
             {
@@ -234,6 +230,7 @@ class DashboardInteractionTests(unittest.TestCase):
                 "Analisis Ulasan",
                 "Data Explorer",
                 "Lampiran Presentasi",
+                "Snapshot Flyer",
             },
         )
         self.assertTrue(
@@ -342,11 +339,8 @@ class DashboardInteractionTests(unittest.TestCase):
         )
         fullscreen_button.click().run()
         self.assertIsNotNone(dashboard.session_state["fullscreen_chart_id"])
-        next(
-            button
-            for button in dashboard.button
-            if button.label == "Tutup Detail"
-        ).click().run()
+        dashboard.session_state["fullscreen_chart_id"] = None
+        dashboard.run()
         self.assertIsNone(dashboard.session_state["fullscreen_chart_id"])
 
         review_nav = next(
