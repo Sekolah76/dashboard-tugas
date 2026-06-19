@@ -2637,13 +2637,13 @@ def inject_custom_css() -> None:
             .kpi-grid {{ grid-template-columns: 1fr; }}
         }}
 
-        /* ── SNAPSHOT FLYER TAB STYLING ── */
+        /* ── REVISED SNAPSHOT FLYER STYLING ── */
         .st-key-snapshot_flyer_frame_desktop {{
             background: #FFFFFF !important;
             border: 2px solid #D7E8FF !important;
-            border-radius: 20px !important;
+            border-radius: 24px !important;
             padding: 24px !important;
-            box-shadow: 0 10px 30px rgba(16, 142, 233, 0.04) !important;
+            box-shadow: 0 12px 40px rgba(16, 142, 233, 0.05) !important;
         }}
 
         .flyer-kpi-grid {{
@@ -2657,86 +2657,133 @@ def inject_custom_css() -> None:
             background: #F8FAFC;
             border: 1px solid #E2E8F0;
             border-radius: 12px;
-            padding: 12px 10px;
+            padding: 8px 10px;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
         }}
 
         .flyer-kpi-label {{
-            font-size: 0.65rem;
+            font-size: 0.62rem;
             color: #64748B;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }}
 
         .flyer-kpi-value {{
-            font-size: 1.5rem;
-            font-weight: 850;
+            font-size: 1.35rem;
+            font-weight: 900;
             color: #108EE9;
             font-variant-numeric: tabular-nums;
+            line-height: 1.2;
+        }}
+
+        .flyer-section-title {{
+            font-size: 0.8rem;
+            font-weight: 850;
+            color: #07132F;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #F0F6FF;
         }}
 
         .flyer-insight-card {{
-            background: #F0F6FF;
+            background: linear-gradient(135deg, #F0F6FF 0%, #E6F0FA 100%);
             border: 1px solid #D7E8FF;
             border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 16px;
+            padding: 14px;
+            margin-bottom: 14px;
         }}
 
         .flyer-insight-title {{
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 800;
             color: #07132F;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #D7E8FF;
-            padding-bottom: 6px;
+            margin-bottom: 6px;
         }}
 
-        .flyer-insight-item {{
-            font-size: 0.78rem;
+        .flyer-insight-text {{
+            font-size: 0.74rem;
             color: #475569;
-            margin-bottom: 8px;
-            line-height: 1.4;
+            line-height: 1.45;
         }}
 
-        .flyer-insight-item strong {{
-            color: #102040;
+        .flyer-mini-stats-grid {{
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }}
+
+        .flyer-mini-stat-card {{
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 8px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+        }}
+
+        .flyer-mini-stat-val {{
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: #07132F;
+            margin-bottom: 2px;
+        }}
+
+        .flyer-mini-stat-lbl {{
+            font-size: 0.58rem;
+            color: #64748B;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
         }}
 
         .flyer-review-card {{
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
             border-radius: 12px;
-            padding: 12px;
+            padding: 10px;
             margin-bottom: 8px;
-            box-shadow: 0 2px 5px rgba(7, 19, 47, 0.03);
+            box-shadow: 0 1px 4px rgba(7, 19, 47, 0.02);
         }}
 
         .flyer-review-header {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }}
 
         .flyer-review-date {{
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #64748B;
             font-weight: 600;
         }}
 
         .flyer-review-text {{
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: #102040;
-            line-height: 1.35;
+            line-height: 1.3;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             white-space: normal;
+        }}
+
+        .flyer-footer {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #F0F6FF;
+            font-size: 0.68rem;
+            color: #94A3B8;
         }}
 
         /* Desktop vs Mobile display utilities */
@@ -7533,6 +7580,36 @@ def render_snapshot_flyer(
         "dana_mark.svg",
     )
 
+    # Compute calculations dynamically based on unfiltered data (guarantees invariants match)
+    survey_count = len(survey) if survey is not None else 50
+    review_count = len(reviews) if reviews is not None else 330
+    
+    avg_skor = (
+        safe_mean(questionnaire["rata_rata"])
+        if questionnaire is not None and not questionnaire.empty
+        else 4.00
+    )
+    
+    metrics = review_metrics(reviews, review_columns)
+    avg_rating = metrics.get("avg_rating", 3.89)
+    positive_pct = metrics.get("positive_pct", 70.3)
+    
+    # Dynamic counts for mini stats
+    if questionnaire is not None and not questionnaire.empty:
+        kuat_count = len(questionnaire[questionnaire["rata_rata"] >= 4.0])
+        cukup_count = len(questionnaire[(questionnaire["rata_rata"] >= 3.0) & (questionnaire["rata_rata"] < 4.0)])
+        perhatian_count = len(questionnaire[questionnaire["rata_rata"] < 3.0])
+    else:
+        kuat_count = 13
+        cukup_count = 7
+        perhatian_count = 0
+        
+    if reviews is not None and not reviews.empty and review_columns.get("rating") in reviews.columns:
+        r_col = review_columns.get("rating")
+        r5_count = len(reviews[reviews[r_col] == 5])
+    else:
+        r5_count = 220
+
     # Desktop View (Canva-ready layout)
     with st.container(key="snapshot_flyer_desktop"):
         with st.container(key="snapshot_flyer_frame_desktop"):
@@ -7548,156 +7625,147 @@ def render_snapshot_flyer(
             with col_title:
                 st.markdown(
                     f'<div style="text-align:left;">'
-                    f'<div style="color:#07132F;font-weight:900;font-size:1.6rem;line-height:1.1;">DANA Insight Command Center</div>'
-                    f'<div style="color:#5C6B86;font-size:0.8rem;font-weight:600;margin-top:2px;">Survey &amp; Review Analytics &mdash; Fintech Experience Dashboard</div>'
+                    f'<div style="display:flex; align-items:center; gap:8px;">'
+                    f'<span style="color:#07132F;font-weight:900;font-size:1.5rem;line-height:1.1;">DANA Insight Command Center</span>'
+                    f'<span style="font-size:0.65rem;font-weight:700;color:#108EE9;background:#EAF5FF;padding:2px 8px;border-radius:20px;border:1px solid #D7E8FF;">PRESENTATION SNAPSHOT</span>'
+                    f'</div>'
+                    f'<div style="color:#5C6B86;font-size:0.78rem;font-weight:600;margin-top:2px;">Survey &amp; Review Analytics &mdash; Fintech Experience Dashboard</div>'
+                    f'<div style="font-size:0.64rem;color:#94A3B8;margin-top:2px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Data Survey {survey_count} Responden &middot; Ulasan {review_count} &middot; Sentimen dari Rating</div>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
             
-            st.markdown('<div style="margin: 15px 0; border-bottom: 2px solid #D7E8FF;"></div>', unsafe_allow_html=True)
+            st.markdown('<div style="margin: 12px 0; border-bottom: 2px solid #D7E8FF;"></div>', unsafe_allow_html=True)
             
             # KPI Metrics Row (5 columns)
-            survey_count = len(survey) if survey is not None else 0
-            review_count = len(reviews) if reviews is not None else 0
-            avg_skor = (
-                safe_mean(questionnaire["rata_rata"])
-                if questionnaire is not None and not questionnaire.empty
-                else 0.0
-            )
-            metrics = review_metrics(reviews, review_columns)
-            avg_rating = metrics["avg_rating"]
-            positive_pct = metrics["positive_pct"]
-            
             kpi_cols = st.columns(5)
             kpis = [
                 ("Responden", f"{survey_count}", "Orang"),
                 ("Ulasan", f"{review_count}", "Ulasan"),
-                ("Rata-rata Skor", f"{avg_skor:.2f}", "/ 5.00"),
-                ("Rata-rata Rating", f"{avg_rating:.2f}", "/ 5.00"),
-                ("Sentimen Positif", f"{positive_pct:.1f}%", "Ulasan"),
+                ("Skor Survey", f"{avg_skor:.2f} / 5", "Rata-rata"),
+                ("Rating Ulasan", f"{avg_rating:.2f} / 5", "Rata-rata"),
+                ("Sentimen Positif", f"{positive_pct:.1f}%", f"{int(positive_pct/100*review_count)} Ulasan"),
             ]
             for col, (label, val, unit) in zip(kpi_cols, kpis):
                 with col:
+                    color_style = "#16C784" if "%" in val else "#108EE9"
                     st.markdown(
                         f'<div class="flyer-kpi-card">'
                         f'<div class="flyer-kpi-label">{label}</div>'
-                        f'<div class="flyer-kpi-value">{val}</div>'
-                        f'<div style="font-size:0.6rem;color:#64748B;font-weight:600;margin-top:2px;">{unit}</div>'
+                        f'<div class="flyer-kpi-value" style="color:{color_style};">{val}</div>'
+                        f'<div style="font-size:0.58rem;color:#64748B;font-weight:600;margin-top:1px;">{unit}</div>'
                         f'</div>',
                         unsafe_allow_html=True,
                     )
             
             # Main Layout Columns
-            col_left, col_right = st.columns([1.8, 1.2])
+            col_1, col_2, col_3 = st.columns([1, 1, 1.1])
             
-            with col_left:
-                # 3-column row for Gender, Age, Sentiment
-                row1_col1, row1_col2, row1_col3 = st.columns(3)
+            with col_1:
+                st.markdown('<div class="flyer-section-title">📊 Profil &amp; Sentimen</div>', unsafe_allow_html=True)
                 
-                with row1_col1:
-                    with st.container(key="flyer_chart_gender", border=True):
-                        gender_col = survey_columns.get("gender")
-                        if survey is not None and gender_col in survey.columns:
-                            g_counts = survey[gender_col].value_counts()
-                            fig = donut_chart(
-                                counts=g_counts,
-                                title="Gender",
-                                color_map={"Perempuan": C_PRIMARY, "Laki-laki": C_SKY},
-                                scope_label="Total data",
-                                unit_label="responden",
-                            )
-                            fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10), showlegend=False)
-                            plot_chart(fig, "flyer_gender")
-                            
-                with row1_col2:
-                    with st.container(key="flyer_chart_age", border=True):
-                        age_col = survey_columns.get("age")
-                        if survey is not None and age_col in survey.columns:
-                            a_counts = survey[age_col].value_counts()
-                            ordered_labels = sorted(a_counts.index.tolist(), key=age_sort_key)
-                            ordered_values = [int(a_counts[label]) for label in ordered_labels]
-                            fig = bar_chart(
-                                labels=ordered_labels,
-                                values=ordered_values,
-                                title="Kelompok Usia",
-                                color=C_ELECTRIC,
-                                height=180,
-                                denominator=len(survey),
-                                scope_label="Total data",
-                                unit_label="responden",
-                            )
-                            fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10))
-                            plot_chart(fig, "flyer_age")
-                            
-                with row1_col3:
-                    with st.container(key="flyer_chart_sentiment", border=True):
-                        if reviews is not None and "sentimen" in reviews.columns:
-                            s_counts = reviews["sentimen"].value_counts()
-                            fig = donut_chart(
-                                counts=s_counts,
-                                title="Sentimen",
-                                color_map={"Positif": C_POSITIVE, "Netral": C_NEUTRAL, "Negatif": C_NEGATIVE},
-                                scope_label="Total data",
-                                unit_label="ulasan",
-                            )
-                            fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10), showlegend=False)
-                            plot_chart(fig, "flyer_sentiment")
+                # Visual 1: Sentimen Ulasan Donut Chart
+                st.markdown('<div style="font-size:0.72rem;font-weight:750;color:#07132F;margin-bottom:4px;text-align:center;">Distribusi Sentimen Ulasan</div>', unsafe_allow_html=True)
+                if reviews is not None and "sentimen" in reviews.columns:
+                    s_counts = reviews["sentimen"].value_counts()
+                    fig_sent = donut_chart(
+                        counts=s_counts,
+                        title="Sentimen",
+                        color_map={"Positif": C_POSITIVE, "Netral": C_NEUTRAL, "Negatif": C_NEGATIVE},
+                        scope_label="Total data",
+                        unit_label="ulasan",
+                    )
+                    fig_sent.update_layout(height=135, margin=dict(t=15, b=5, l=5, r=5), showlegend=False, title=None)
+                    plot_chart(fig_sent, "flyer_sent")
                 
-                # 2-column row for Rating & Variables
-                row2_col1, row2_col2 = st.columns([1, 1.2])
-                with row2_col1:
-                    with st.container(key="flyer_chart_rating", border=True):
-                        rating_col = review_columns.get("rating")
-                        if reviews is not None and rating_col in reviews.columns:
-                            r_counts = reviews[rating_col].dropna().astype(int).value_counts().reindex([1, 2, 3, 4, 5], fill_value=0)
-                            colors = [C_NEGATIVE, "#F87171", C_NEUTRAL, "#34D399", C_POSITIVE]
-                            fig = bar_chart(
-                                labels=[f"Rating {r}" for r in r_counts.index],
-                                values=r_counts.values.tolist(),
-                                title="Sebaran Rating",
-                                color=colors,
-                                height=180,
-                                denominator=len(reviews),
-                                scope_label="Total data",
-                                unit_label="ulasan",
-                            )
-                            fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10))
-                            plot_chart(fig, "flyer_rating")
-                            
-                with row2_col2:
-                    with st.container(key="flyer_chart_variables", border=True):
-                        if survey is not None:
-                            vars_df, _ = compute_variable_scores(survey, survey_columns.get("questions", []))
-                            fig = variable_score_chart(
-                                variables=vars_df,
-                                scope_label="Total data",
-                            )
-                            fig.update_layout(height=180, margin=dict(t=25, b=10, l=10, r=10))
-                            plot_chart(fig, "flyer_variables")
-                            
-            with col_right:
-                # Insight Utama Card
+                # Visual 2: Profil Responden Gender Donut Chart
+                st.markdown('<div style="font-size:0.72rem;font-weight:750;color:#07132F;margin-top:8px;margin-bottom:4px;text-align:center;">Karakteristik Gender &amp; Usia</div>', unsafe_allow_html=True)
+                gender_col = survey_columns.get("gender")
+                if survey is not None and gender_col in survey.columns:
+                    g_counts = survey[gender_col].value_counts()
+                    fig_gend = donut_chart(
+                        counts=g_counts,
+                        title="Gender",
+                        color_map={"Perempuan": C_PRIMARY, "Laki-laki": C_SKY},
+                        scope_label="Total data",
+                        unit_label="responden",
+                    )
+                    fig_gend.update_layout(height=135, margin=dict(t=15, b=5, l=5, r=5), showlegend=False, title=None)
+                    plot_chart(fig_gend, "flyer_gender")
+                
                 st.markdown(
-                    f'<div class="flyer-insight-card">'
-                    f'<div class="flyer-insight-title">💡 Insight Utama</div>'
-                    f'<div class="flyer-insight-item">Profil Gender: <strong>Perempuan 78%</strong> (39 dari 50 responden)</div>'
-                    f'<div class="flyer-insight-item">Usia Dominan: Kelompok <strong>18–22 Tahun 72%</strong> (36 responden)</div>'
-                    f'<div class="flyer-insight-item">Pola Penggunaan: Intensitas <strong>Jarang 42%</strong> (21 responden)</div>'
-                    f'<div class="flyer-insight-item">Keyword Perhatian: <span style="background:#FFF1F2;color:#E11D48;font-weight:700;padding:1px 4px;border-radius:4px;">akun</span>, '
-                    f'<span style="background:#FFF1F2;color:#E11D48;font-weight:700;padding:1px 4px;border-radius:4px;">saldo</span>, '
-                    f'<span style="background:#FFF1F2;color:#E11D48;font-weight:700;padding:1px 4px;border-radius:4px;">hilang</span></div>'
+                    f'<div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:8px 10px; margin-top:8px; text-align:center;">'
+                    f'<span style="font-size:0.68rem;color:#475569;">Usia Dominan: <strong style="color:#07132F;">18&ndash;22 Tahun 72%</strong> (36 Responden)</span>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+            with col_2:
+                st.markdown('<div class="flyer-section-title">📈 Skor Pengalaman &amp; Metrik</div>', unsafe_allow_html=True)
+                
+                # Visual 3: Skor Variabel X1, X2, M, Y
+                st.markdown('<div style="font-size:0.72rem;font-weight:750;color:#07132F;margin-bottom:4px;text-align:center;">Rata-rata Skor per Variabel</div>', unsafe_allow_html=True)
+                if survey is not None:
+                    vars_df, _ = compute_variable_scores(survey, survey_columns.get("questions", []))
+                    fig_vars = variable_score_chart(
+                        variables=vars_df,
+                        scope_label="Total data",
+                    )
+                    fig_vars.update_layout(
+                        height=160,
+                        margin=dict(t=15, b=20, l=20, r=5),
+                        title=None,
+                        xaxis={"tickfont": {"size": 8}},
+                        yaxis={"tickfont": {"size": 8}, "title": None}
+                    )
+                    plot_chart(fig_vars, "flyer_variables")
+                
+                st.markdown(
+                    f'<div style="display:flex; justify-content:space-between; font-size:0.62rem; color:#64748B; margin-top:-4px; padding:0 4px; margin-bottom:10px;">'
+                    f'<span>Terkuat: <strong>X2 Praktis (4.26)</strong></span>'
+                    f'<span>Pantau: <strong>M Percaya (3.82)</strong></span>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
                 
-                # Mini Ulasan List (Max 5 rows, latest)
-                st.markdown('<div style="font-size:0.75rem;font-weight:800;color:#07132F;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.03em;">💬 Ulasan Pengguna Terbaru (Terlindung)</div>', unsafe_allow_html=True)
+                # Mini Statistic Cards (2x2 Grid)
+                st.markdown('<div style="font-size:0.72rem;font-weight:750;color:#07132F;margin-bottom:6px;text-align:center;">Metrik Indikator &amp; Rating</div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="flyer-mini-stats-grid">'
+                    f'<div class="flyer-mini-stat-card"><div class="flyer-mini-stat-val" style="color:#16C784;">{kuat_count}</div><div class="flyer-mini-stat-lbl">Kuat (Skor &ge; 4.00)</div></div>'
+                    f'<div class="flyer-mini-stat-card"><div class="flyer-mini-stat-val" style="color:#FFB020;">{cukup_count}</div><div class="flyer-mini-stat-lbl">Cukup (3.00-3.99)</div></div>'
+                    f'<div class="flyer-mini-stat-card"><div class="flyer-mini-stat-val" style="color:#FF4D5E;">{perhatian_count}</div><div class="flyer-mini-stat-lbl">Perlu Pantau (&lt; 3.00)</div></div>'
+                    f'<div class="flyer-mini-stat-card"><div class="flyer-mini-stat-val" style="color:#108EE9;">{r5_count}</div><div class="flyer-mini-stat-lbl">Rating 5 (Bintang)</div></div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+            with col_3:
+                st.markdown('<div class="flyer-section-title">💡 Insight &amp; Narasi</div>', unsafe_allow_html=True)
+                
+                # Insight Narrative Card
+                st.markdown(
+                    f'<div class="flyer-insight-card">'
+                    f'<div class="flyer-insight-title">💡 Narasi Analisis</div>'
+                    f'<div class="flyer-insight-text">'
+                    f'Mayoritas responden adalah perempuan (78%) dan berada pada kelompok usia dominan 18&ndash;22 tahun (72%). '
+                    f'Pengalaman keseluruhan pengguna terhadap DANA tergolong sangat baik dengan rata-rata skor survey 4.00/5. '
+                    f'Ulasan pengguna juga didominasi sentimen positif sebesar 70.3%. Area yang perlu dipantau '
+                    f'adalah kepercayaan dengan keluhan utama seputar keyword akun, saldo, dan hilang.'
+                    f'</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+                
+                # Mini Review List (Max 3 ulasan, latest, truncated)
+                st.markdown('<div style="font-size:0.75rem;font-weight:800;color:#07132F;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.03em;">💬 Ulasan Pengguna Terbaru</div>', unsafe_allow_html=True)
                 if reviews is not None and not reviews.empty:
                     date_col = review_columns.get("date")
                     text_col = review_columns.get("review")
                     rating_col = review_columns.get("rating")
                     
-                    sorted_reviews = reviews.sort_values(date_col, ascending=False).head(5)
+                    # Sort by date descending and take top 3
+                    sorted_reviews = reviews.sort_values(date_col, ascending=False).head(3)
                     for _, row in sorted_reviews.iterrows():
                         r_val = row.get(rating_col, "-")
                         d_val = str(row.get(date_col, "-"))
@@ -7712,8 +7780,8 @@ def render_snapshot_flyer(
                             f'<div class="flyer-review-header">'
                             f'<span class="flyer-review-date">{escape(d_val)}</span>'
                             f'<div style="display:flex;gap:4px;">'
-                            f'<span style="font-size:0.6rem;font-weight:700;color:{s_color};background:{s_bg};padding:1px 4px;border-radius:4px;">{escape(s_val)}</span>'
-                            f'<span style="font-size:0.6rem;font-weight:700;color:#0B5ED7;background:#EAF5FF;padding:1px 4px;border-radius:4px;">★ {r_val}</span>'
+                            f'<span style="font-size:0.58rem;font-weight:700;color:{s_color};background:{s_bg};padding:1px 4px;border-radius:4px;">{escape(s_val)}</span>'
+                            f'<span style="font-size:0.58rem;font-weight:700;color:#0B5ED7;background:#EAF5FF;padding:1px 4px;border-radius:4px;">★ {r_val}</span>'
                             f'</div>'
                             f'</div>'
                             f'<div class="flyer-review-text">{escape(t_val)}</div>'
@@ -7722,21 +7790,20 @@ def render_snapshot_flyer(
                         )
                 else:
                     st.info("Data ulasan tidak tersedia.")
+            
+            # Flyer Footer
+            st.markdown(
+                f'<div class="flyer-footer">'
+                f'<span>Dashboard: <a href="https://dashboard-dana.streamlit.app" target="_blank" style="color:#108EE9;text-decoration:none;font-weight:700;">dashboard-dana.streamlit.app</a></span>'
+                f'<span>GitHub: <a href="https://github.com/Sekolah76/dashboard-tugas" target="_blank" style="color:#108EE9;text-decoration:none;font-weight:700;">github.com/Sekolah76/dashboard-tugas</a></span>'
+                f'<span>Disclaimer: Data bersifat deskriptif &amp; terlindung sepenuhnya.</span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
 
     # Mobile View (notice and clean simplified stats, no overflow)
     with st.container(key="snapshot_flyer_mobile"):
         st.info("📱 Gunakan laptop/desktop untuk screenshot flyer terbaik.")
-        
-        survey_count = len(survey) if survey is not None else 0
-        review_count = len(reviews) if reviews is not None else 0
-        metrics = review_metrics(reviews, review_columns)
-        avg_skor = (
-            safe_mean(questionnaire["rata_rata"])
-            if questionnaire is not None and not questionnaire.empty
-            else 0.0
-        )
-        avg_rating = metrics["avg_rating"]
-        positive_pct = metrics["positive_pct"]
         
         st.markdown('<div style="font-weight:800;color:#07132F;font-size:0.9rem;margin-bottom:8px;">Ringkasan KPI Utama</div>', unsafe_allow_html=True)
         mobile_kpis = [

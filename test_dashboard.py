@@ -194,6 +194,29 @@ class DashboardDataTests(unittest.TestCase):
         self.assertIn("Gender: Perempuan", chips)
         self.assertIn("Rating: 1", chips)
 
+    def test_flyer_chart_properties(self) -> None:
+        # Check that bar_chart layout height is numeric and matches height parameter
+        fig_bar = app.bar_chart(
+            labels=["A", "B"],
+            values=[10, 20],
+            title="Test Bar Chart",
+            height=180
+        )
+        self.assertEqual(fig_bar.layout.height, 180)
+        self.assertIsInstance(fig_bar.layout.height, (int, float))
+
+        # Check variable score chart height
+        vars_df = pd.DataFrame({
+            "variabel": ["X1", "X2"],
+            "rata_rata": [4.0, 4.2],
+            "interpretasi": ["Kuat", "Kuat"],
+            "jumlah_indikator": [4, 4]
+        })
+        fig_vars = app.variable_score_chart(vars_df, "Total data")
+        self.assertEqual(fig_vars.layout.height, 360)  # default in variable_score_chart
+        self.assertIsInstance(fig_vars.layout.height, (int, float))
+
+
 
 class DashboardInteractionTests(unittest.TestCase):
     def test_landing_navigation_filters_fullscreen_and_pagination(self) -> None:
@@ -373,6 +396,24 @@ class DashboardInteractionTests(unittest.TestCase):
             if button.key == "horizontal_nav_Lampiran Presentasi"
         )
         attachment_nav.click().run()
+
+        # Navigate to Snapshot Flyer tab to check for layout or chart height errors
+        flyer_nav = next(
+            button
+            for button in dashboard.button
+            if button.key == "horizontal_nav_Snapshot Flyer"
+        )
+        flyer_nav.click().run()
+        self.assertEqual(len(dashboard.exception), 0)
+
+        # Navigate back to Lampiran Presentasi to find the Tampilkan Lobi button
+        attachment_nav = next(
+            button
+            for button in dashboard.button
+            if button.key == "horizontal_nav_Lampiran Presentasi"
+        )
+        attachment_nav.click().run()
+
         next(
             button for button in dashboard.button if button.label == "Tampilkan Lobi"
         ).click().run()
@@ -380,6 +421,7 @@ class DashboardInteractionTests(unittest.TestCase):
             any(button.label == "Masuk ke Dashboard" for button in dashboard.button)
         )
         self.assertEqual(len(dashboard.exception), 0)
+
 
 
 if __name__ == "__main__":
