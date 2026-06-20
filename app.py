@@ -102,12 +102,12 @@ def apply_normal_chart_behavior(fig):
         selectdirection=None,
         spikedistance=-1,
         hoverlabel=dict(
-            bgcolor="rgba(15, 23, 42, 0.95)",
-            bordercolor="rgba(255,255,255,0.2)",
+            bgcolor="#FFFFFF",
+            bordercolor="#D7E8FF",
             font=dict(
                 family="Inter, Arial, sans-serif",
                 size=11,
-                color="#FFFFFF",
+                color="#0F172A",
             ),
             align="left",
             namelength=-1,
@@ -130,12 +130,12 @@ def apply_fullscreen_chart_behavior(fig):
         hovermode="closest",
         spikedistance=-1,
         hoverlabel=dict(
-            bgcolor="rgba(15, 23, 42, 0.95)",
-            bordercolor="rgba(255,255,255,0.2)",
+            bgcolor="#FFFFFF",
+            bordercolor="#D7E8FF",
             font=dict(
                 family="Inter, Arial, sans-serif",
                 size=11,
-                color="#FFFFFF",
+                color="#0F172A",
             ),
             align="left",
             namelength=-1,
@@ -2791,6 +2791,39 @@ def inject_custom_css() -> None:
             color: #94A3B8;
         }}
 
+        .insight-highlight-grid {{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.72rem;
+            margin: 0.5rem 0 0.85rem;
+        }}
+        .insight-highlight-card {{
+            padding: 0.75rem 1rem;
+            border-radius: 14px;
+            min-width: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            word-break: keep-all;
+            overflow-wrap: normal;
+        }}
+        .insight-highlight-label {{
+            font-size: 0.58rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            word-break: keep-all;
+            overflow-wrap: normal;
+            white-space: normal;
+        }}
+        .insight-highlight-value {{
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #0F172A;
+            line-height: 1.3;
+            word-break: keep-all;
+            overflow-wrap: normal;
+            white-space: normal;
+        }}
+
         /* Desktop vs Mobile display utilities */
         div[class*="st-key-"][class*="_desktop"] {{
             display: block !important;
@@ -2868,6 +2901,21 @@ def inject_custom_css() -> None:
                 gap: 8px !important;
                 margin: 0.8rem 0 1.2rem !important;
             }}
+
+            .insight-highlight-grid {{
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+                margin: 0.4rem 0 0.7rem !important;
+            }}
+            .insight-highlight-card {{
+                padding: 0.6rem 0.8rem !important;
+            }}
+            .insight-highlight-label {{
+                font-size: 0.54rem !important;
+            }}
+            .insight-highlight-value {{
+                font-size: 0.82rem !important;
+            }}
             .kpi-card {{
                 min-height: 112px !important;
                 padding: 10px 8px !important;
@@ -2894,7 +2942,7 @@ def inject_custom_css() -> None:
                 text-align: left !important;
                 word-break: keep-all !important;
                 overflow-wrap: normal !important;
-                white-space: nowrap !important;
+                white-space: normal !important;
                 font-size: 0.58rem !important;
                 line-height: 1.1 !important;
                 min-width: 0 !important;
@@ -4159,10 +4207,10 @@ def base_layout(title: str, height: int = 360, **overrides: Any) -> dict[str, An
         "plot_bgcolor": "rgba(0,0,0,0)",
         "font": {"family": "Inter, Segoe UI, sans-serif", "color": "#475569"},
         "hoverlabel": {
-            "bgcolor": "rgba(15, 23, 42, 0.95)",
-            "font_color": "#FFFFFF",
+            "bgcolor": "#FFFFFF",
+            "font_color": "#0F172A",
             "font_size": 11,
-            "bordercolor": "rgba(255,255,255,0.2)",
+            "bordercolor": "#D7E8FF",
             "namelength": -1,
             "align": "left",
         },
@@ -5997,18 +6045,17 @@ def insight_highlight_cards(
         ("Area Perhatian", area_val, "#EF4444", "#FEF2F2", "⚠️"),
     ]
     card_html = "".join(
-        f'<div style="padding:.75rem 1rem;background:{bg};border:1.5px solid {color}33;border-radius:14px;min-width:0;box-shadow:0 2px 8px rgba(0,0,0,.04);">'
+        f'<div class="insight-highlight-card" style="background:{bg};border:1.5px solid {color}33;">'
         f'<div style="display:flex;align-items:center;gap:.3rem;margin-bottom:.28rem;">'
         f'<span style="font-size:1rem;line-height:1;">{icon}</span>'
-        f'<span style="font-size:.58rem;font-weight:800;color:{color};text-transform:uppercase;letter-spacing:.06em;">{escape(label)}</span>'
+        f'<span class="insight-highlight-label" style="color:{color};">{escape(label)}</span>'
         f'</div>'
-        f'<div style="font-size:.9rem;font-weight:700;color:#0F172A;line-height:1.3;">{escape(value)}</div>'
+        f'<div class="insight-highlight-value">{escape(value)}</div>'
         f'</div>'
         for label, value, color, bg, icon in _insight_data
     )
     st.markdown(
-        f'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.72rem;margin:.5rem 0 .85rem;">'
-        f'{card_html}</div>',
+        f'<div class="insight-highlight-grid">{card_html}</div>',
         unsafe_allow_html=True,
     )
 
@@ -7642,6 +7689,14 @@ def render_conclusion(
     )
 
 
+def render_clean_html(html_str: str) -> None:
+    import textwrap
+    dedented = textwrap.dedent(html_str).strip()
+    # Remove leading whitespace from each line to prevent markdown code block formatting (4+ spaces)
+    cleaned = "\n".join(line.lstrip() for line in dedented.splitlines())
+    st.markdown(cleaned, unsafe_allow_html=True)
+
+
 def render_snapshot_flyer(
     survey: pd.DataFrame | None,
     reviews: pd.DataFrame | None,
@@ -7649,6 +7704,8 @@ def render_snapshot_flyer(
     questionnaire: pd.DataFrame | None,
     survey_columns: dict[str, Any],
 ) -> None:
+    import textwrap
+
     section_heading(
         "Flyer Snapshot",
         "Snapshot Flyer",
@@ -7686,6 +7743,32 @@ def render_snapshot_flyer(
     else:
         r5_count = 220
 
+    # Calculate variables score dynamically
+    x1_score = 4.00
+    x2_score = 4.26
+    m_score = 3.82
+    y_score = 4.00
+
+    if survey is not None:
+        vars_df, _ = compute_variable_scores(survey, survey_columns.get("questions", []))
+        if not vars_df.empty:
+            for _, row in vars_df.iterrows():
+                var_name = str(row["variabel"])
+                score_val = float(row["rata_rata"])
+                if "X1" in var_name:
+                    x1_score = score_val
+                elif "X2" in var_name:
+                    x2_score = score_val
+                elif "M" in var_name:
+                    m_score = score_val
+                elif "Y" in var_name:
+                    y_score = score_val
+
+    x1_pct = min(100.0, max(0.0, (x1_score / 5.0) * 100.0))
+    x2_pct = min(100.0, max(0.0, (x2_score / 5.0) * 100.0))
+    m_pct = min(100.0, max(0.0, (m_score / 5.0) * 100.0))
+    y_pct = min(100.0, max(0.0, (y_score / 5.0) * 100.0))
+
     # Load visual assets safely via the cached registry
     bg_path = find_existing_asset(["assets/dana_hero_banner_1920x520.png"])
     bg_uri = image_to_data_uri(bg_path) if bg_path else ""
@@ -7696,235 +7779,214 @@ def render_snapshot_flyer(
     with st.container(key="snapshot_flyer_desktop"):
         with st.container(key="snapshot_flyer_frame_desktop"):
             # Header Row with base64 visual background
-            st.markdown(
-                f"""
-                <div class="flyer-header-visual" style="
-                    background-image: linear-gradient(90deg, #F7FBFF 0%, rgba(247,251,255,0.96) 35%, rgba(247,251,255,0.85) 60%, rgba(247,251,255,0.1) 100%), url('{bg_uri}');
-                    background-size: cover;
-                    background-position: right center;
-                    border-radius: 18px;
-                    padding: 20px 24px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    border: 1px solid #D7E8FF;
-                    margin-bottom: 16px;
-                ">
-                    <div style="text-align:left;">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <img src="{logo_uri}" alt="DANA Logo" style="height:28px; width:auto; object-fit:contain; display:block;" />
-                            <span style="font-size:0.65rem; font-weight:800; color:#108EE9; background:#EAF5FF; padding:2px 8px; border-radius:20px; border:1px solid #D7E8FF; text-transform:uppercase; letter-spacing:0.05em;">Presentation Snapshot</span>
-                        </div>
-                        <div style="color:#07132F; font-weight:900; font-size:1.6rem; line-height:1.2; margin-top:6px;">DANA Insight Command Center</div>
-                        <div style="color:#5C6B86; font-size:0.8rem; font-weight:600; margin-top:2px;">Survey &amp; Review Analytics — Fintech Experience Dashboard</div>
+            render_clean_html(f"""
+            <div class="flyer-header-visual" style="
+                background-image: linear-gradient(90deg, #F7FBFF 0%, rgba(247,251,255,0.96) 35%, rgba(247,251,255,0.85) 60%, rgba(247,251,255,0.1) 100%), url('{bg_uri}');
+                background-size: cover;
+                background-position: right center;
+                border-radius: 18px;
+                padding: 20px 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border: 1px solid #D7E8FF;
+                margin-bottom: 16px;
+            ">
+                <div style="text-align:left;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="{logo_uri}" alt="DANA Logo" style="height:28px; width:auto; object-fit:contain; display:block;" />
+                        <span style="font-size:0.65rem; font-weight:800; color:#108EE9; background:#EAF5FF; padding:2px 8px; border-radius:20px; border:1px solid #D7E8FF; text-transform:uppercase; letter-spacing:0.05em;">Presentation Snapshot</span>
                     </div>
-                    <div style="text-align:right; font-size:0.68rem; color:#64748B; font-weight:700; background:rgba(255,255,255,0.8); padding:8px 12px; border-radius:10px; border:1px solid #E2E8F0; backdrop-filter:blur(4px);">
-                        <div>DATA SURVEY: {survey_count} RESPONDEN</div>
-                        <div style="margin-top:2px;">REVIEW: {review_count} ULASAN</div>
-                    </div>
+                    <div style="color:#07132F; font-weight:900; font-size:1.6rem; line-height:1.2; margin-top:6px;">DANA Insight Command Center</div>
+                    <div style="color:#5C6B86; font-size:0.8rem; font-weight:600; margin-top:2px;">Survey &amp; Review Analytics — Fintech Experience Dashboard</div>
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
+                <div style="text-align:right; font-size:0.68rem; color:#64748B; font-weight:700; background:rgba(255,255,255,0.8); padding:8px 12px; border-radius:10px; border:1px solid #E2E8F0; backdrop-filter:blur(4px);">
+                    <div>DATA SURVEY: {survey_count} RESPONDEN</div>
+                    <div style="margin-top:2px;">REVIEW: {review_count} ULASAN</div>
+                </div>
+            </div>
+            """)
             
             # KPI Metrics Row (5 columns)
-            st.markdown(
-                f"""
-                <div class="flyer-kpi-grid" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px;">
-                    <div class="flyer-kpi-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:10px; text-align:center;">
-                        <div class="flyer-kpi-label" style="font-size:0.58rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Responden</div>
-                        <div class="flyer-kpi-value" style="font-size:1.45rem; font-weight:900; color:#108EE9; font-variant-numeric:tabular-nums; line-height:1.15;">{survey_count}</div>
-                        <div style="font-size:0.55rem; color:#64748B; font-weight:600; margin-top:2px;">Responden Survei</div>
-                    </div>
-                    <div class="flyer-kpi-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:10px; text-align:center;">
-                        <div class="flyer-kpi-label" style="font-size:0.58rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Ulasan</div>
-                        <div class="flyer-kpi-value" style="font-size:1.45rem; font-weight:900; color:#2563EB; font-variant-numeric:tabular-nums; line-height:1.15;">{review_count}</div>
-                        <div style="font-size:0.55rem; color:#64748B; font-weight:600; margin-top:2px;">Ulasan Pengguna</div>
-                    </div>
-                    <div class="flyer-kpi-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:10px; text-align:center;">
-                        <div class="flyer-kpi-label" style="font-size:0.58rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Skor Survey</div>
-                        <div class="flyer-kpi-value" style="font-size:1.45rem; font-weight:900; color:#108EE9; font-variant-numeric:tabular-nums; line-height:1.15;">{avg_skor:.2f}<span style="font-size:0.8rem; font-weight:600; color:#64748B;"> / 5</span></div>
-                        <div style="font-size:0.55rem; color:#64748B; font-weight:600; margin-top:2px;">Rata-rata Kuesioner</div>
-                    </div>
-                    <div class="flyer-kpi-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:10px; text-align:center;">
-                        <div class="flyer-kpi-label" style="font-size:0.58rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Rating Ulasan</div>
-                        <div class="flyer-kpi-value" style="font-size:1.45rem; font-weight:900; color:#FFB020; font-variant-numeric:tabular-nums; line-height:1.15;">{avg_rating:.2f}<span style="font-size:0.8rem; font-weight:600; color:#64748B;"> / 5</span></div>
-                        <div style="font-size:0.55rem; color:#64748B; font-weight:600; margin-top:2px;">Rata-rata Rating</div>
-                    </div>
-                    <div class="flyer-kpi-card" style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:14px; padding:10px; text-align:center;">
-                        <div class="flyer-kpi-label" style="font-size:0.58rem; color:#047857; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Sentimen Positif</div>
-                        <div class="flyer-kpi-value" style="font-size:1.45rem; font-weight:900; color:#10B981; font-variant-numeric:tabular-nums; line-height:1.15;">{positive_pct:.1f}%</div>
-                        <div style="font-size:0.55rem; color:#047857; font-weight:600; margin-top:2px;">{int(positive_pct/100*review_count)} dari {review_count} Ulasan</div>
-                    </div>
+            render_clean_html(f"""
+            <div class="flyer-kpi-grid" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px;">
+                <div class="flyer-kpi-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:10px; text-align:center;">
+                    <div class="flyer-kpi-label" style="font-size:0.58rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Responden</div>
+                    <div class="flyer-kpi-value" style="font-size:1.45rem; font-weight:900; color:#108EE9; font-variant-numeric:tabular-nums; line-height:1.15;">{survey_count}</div>
+                    <div style="font-size:0.55rem; color:#64748B; font-weight:600; margin-top:2px;">Responden Survei</div>
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
+                <div class="flyer-kpi-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:10px; text-align:center;">
+                    <div class="flyer-kpi-label" style="font-size:0.58rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Ulasan</div>
+                    <div class="flyer-kpi-value" style="font-size:1.45rem; font-weight:900; color:#2563EB; font-variant-numeric:tabular-nums; line-height:1.15;">{review_count}</div>
+                    <div style="font-size:0.55rem; color:#64748B; font-weight:600; margin-top:2px;">Ulasan Pengguna</div>
+                </div>
+                <div class="flyer-kpi-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:10px; text-align:center;">
+                    <div class="flyer-kpi-label" style="font-size:0.58rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Skor Survey</div>
+                    <div class="flyer-kpi-value" style="font-size:1.45rem; font-weight:900; color:#108EE9; font-variant-numeric:tabular-nums; line-height:1.15;">{avg_skor:.2f}<span style="font-size:0.8rem; font-weight:600; color:#64748B;"> / 5</span></div>
+                    <div style="font-size:0.55rem; color:#64748B; font-weight:600; margin-top:2px;">Rata-rata Kuesioner</div>
+                </div>
+                <div class="flyer-kpi-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:10px; text-align:center;">
+                    <div class="flyer-kpi-label" style="font-size:0.58rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Rating Ulasan</div>
+                    <div class="flyer-kpi-value" style="font-size:1.45rem; font-weight:900; color:#FFB020; font-variant-numeric:tabular-nums; line-height:1.15;">{avg_rating:.2f}<span style="font-size:0.8rem; font-weight:600; color:#64748B;"> / 5</span></div>
+                    <div style="font-size:0.55rem; color:#64748B; font-weight:600; margin-top:2px;">Rata-rata Rating</div>
+                </div>
+                <div class="flyer-kpi-card" style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:14px; padding:10px; text-align:center;">
+                    <div class="flyer-kpi-label" style="font-size:0.58rem; color:#047857; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Sentimen Positif</div>
+                    <div class="flyer-kpi-value" style="font-size:1.45rem; font-weight:900; color:#10B981; font-variant-numeric:tabular-nums; line-height:1.15;">{positive_pct:.1f}%</div>
+                    <div style="font-size:0.55rem; color:#047857; font-weight:600; margin-top:2px;">{int(positive_pct/100*review_count)} dari {review_count} Ulasan</div>
+                </div>
+            </div>
+            """)
             
             # Main Layout Columns
             col_1, col_2, col_3 = st.columns([1.05, 1.0, 1.15])
             
             with col_1:
-                st.markdown(
-                    f"""
-                    <div class="flyer-card" style="background:white; border:1px solid #D7E8FF; border-radius:16px; padding:14px; height:100%; box-shadow:0 2px 4px rgba(7, 19, 47, 0.02);">
-                        <div class="flyer-section-title" style="font-size:0.8rem; font-weight:850; color:#07132F; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; padding-bottom:4px; border-bottom:2px solid #F0F6FF;">
-                            👥 Profil Responden
+                render_clean_html(f"""
+                <div class="flyer-card" style="background:white; border:1px solid #D7E8FF; border-radius:16px; padding:14px; height:100%; box-shadow:0 2px 4px rgba(7, 19, 47, 0.02);">
+                    <div class="flyer-section-title" style="font-size:0.8rem; font-weight:850; color:#07132F; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; padding-bottom:4px; border-bottom:2px solid #F0F6FF;">
+                        👥 Profil Responden
+                    </div>
+                    
+                    <!-- Gender Row -->
+                    <div style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#475569; margin-bottom:4px; font-weight:600;">
+                            <span>Perempuan: <strong>78.0%</strong> (39)</span>
+                            <span>Laki-laki: <strong>22.0%</strong> (11)</span>
                         </div>
-                        
-                        <!-- Gender Row -->
-                        <div style="margin-bottom:12px;">
-                            <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#475569; margin-bottom:4px; font-weight:600;">
-                                <span>Perempuan: <strong>78.0%</strong> (39)</span>
-                                <span>Laki-laki: <strong>22.0%</strong> (11)</span>
-                            </div>
-                            <div style="display:flex; height:10px; border-radius:5px; overflow:hidden; background:#E2E8F0;">
-                                <div style="width:78%; background:#108EE9;" title="Perempuan: 78%"></div>
-                                <div style="width:22%; background:#38BDF8;" title="Laki-laki: 22%"></div>
-                            </div>
-                        </div>
-
-                        <!-- Age Row -->
-                        <div style="margin-bottom:12px;">
-                            <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#475569; margin-bottom:4px; font-weight:600;">
-                                <span>Usia Dominan: <strong>18&ndash;22 Tahun</strong></span>
-                                <span><strong>72.0%</strong> (36)</span>
-                            </div>
-                            <div style="display:flex; height:10px; border-radius:5px; overflow:hidden; background:#E2E8F0;">
-                                <div style="width:72%; background:#2563EB;" title="18-22 Tahun: 72%"></div>
-                                <div style="width:14%; background:#60A5FA;" title="23-27 Tahun: 14%"></div>
-                                <div style="width:14%; background:#93C5FD;" title="Lainnya: 14%"></div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-size:0.58rem; color:#64748B; margin-top:2px;">
-                                <span>18&ndash;22: 72%</span>
-                                <span>23&ndash;27: 14%</span>
-                                <span>Lainnya: 14%</span>
-                            </div>
-                        </div>
-
-                        <!-- Frequency Row -->
-                        <div style="margin-bottom:12px;">
-                            <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#475569; margin-bottom:4px; font-weight:600;">
-                                <span>Frekuensi Dominan: <strong>Jarang</strong></span>
-                                <span><strong>42.0%</strong> (21)</span>
-                            </div>
-                            <div style="display:flex; height:10px; border-radius:5px; overflow:hidden; background:#E2E8F0;">
-                                <div style="width:42%; background:#0B5ED7;" title="Jarang: 42%"></div>
-                                <div style="width:38%; background:#3B82F6;" title="Sering: 38%"></div>
-                                <div style="width:20%; background:#93C5FD;" title="Sangat Sering: 20%"></div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-size:0.58rem; color:#64748B; margin-top:2px;">
-                                <span>Jarang: 42%</span>
-                                <span>Sering: 38%</span>
-                                <span>Sgt Sering: 20%</span>
-                            </div>
-                        </div>
-
-                        <!-- Highlight Box -->
-                        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px; text-align:left; margin-top:8px;">
-                            <div style="font-size:0.62rem; color:#64748B; font-weight:700; text-transform:uppercase; margin-bottom:2px;">Karakteristik Utama</div>
-                            <div style="font-size:0.72rem; color:#07132F; font-weight:600; line-height:1.35;">
-                                Mayoritas responden survei adalah <strong>Perempuan</strong>, kelompok usia muda <strong>18&ndash;22 tahun</strong>, dengan tingkat penggunaan <strong>Jarang</strong>.
-                            </div>
+                        <div style="display:flex; height:10px; border-radius:5px; overflow:hidden; background:#E2E8F0;">
+                            <div style="width:78%; background:#108EE9;" title="Perempuan: 78%"></div>
+                            <div style="width:22%; background:#38BDF8;" title="Laki-laki: 22%"></div>
                         </div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+
+                    <!-- Age Row -->
+                    <div style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#475569; margin-bottom:4px; font-weight:600;">
+                            <span>Usia Dominan: <strong>18&ndash;22 Tahun</strong></span>
+                            <span><strong>72.0%</strong> (36)</span>
+                        </div>
+                        <div style="display:flex; height:10px; border-radius:5px; overflow:hidden; background:#E2E8F0;">
+                            <div style="width:72%; background:#2563EB;" title="18-22 Tahun: 72%"></div>
+                            <div style="width:14%; background:#60A5FA;" title="23-27 Tahun: 14%"></div>
+                            <div style="width:14%; background:#93C5FD;" title="Lainnya: 14%"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.58rem; color:#64748B; margin-top:2px;">
+                            <span>18&ndash;22: 72%</span>
+                            <span>23&ndash;27: 14%</span>
+                            <span>Lainnya: 14%</span>
+                        </div>
+                    </div>
+
+                    <!-- Frequency Row -->
+                    <div style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#475569; margin-bottom:4px; font-weight:600;">
+                            <span>Frekuensi Dominan: <strong>Jarang</strong></span>
+                            <span><strong>42.0%</strong> (21)</span>
+                        </div>
+                        <div style="display:flex; height:10px; border-radius:5px; overflow:hidden; background:#E2E8F0;">
+                            <div style="width:42%; background:#0B5ED7;" title="Jarang: 42%"></div>
+                            <div style="width:38%; background:#3B82F6;" title="Sering: 38%"></div>
+                            <div style="width:20%; background:#93C5FD;" title="Sangat Sering: 20%"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.58rem; color:#64748B; margin-top:2px;">
+                            <span>Jarang: 42%</span>
+                            <span>Sering: 38%</span>
+                            <span>Sgt Sering: 20%</span>
+                        </div>
+                    </div>
+
+                    <!-- Highlight Box -->
+                    <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px; text-align:left; margin-top:8px;">
+                        <div style="font-size:0.62rem; color:#64748B; font-weight:700; text-transform:uppercase; margin-bottom:2px;">Karakteristik Utama</div>
+                        <div style="font-size:0.72rem; color:#07132F; font-weight:600; line-height:1.35;">
+                            Mayoritas responden survei adalah <strong>Perempuan</strong>, kelompok usia muda <strong>18&ndash;22 tahun</strong>, dengan tingkat penggunaan <strong>Jarang</strong>.
+                        </div>
+                    </div>
+                </div>
+                """)
             
             with col_2:
-                st.markdown(
-                    f"""
-                    <div class="flyer-card" style="background:white; border:1px solid #D7E8FF; border-radius:16px; padding:14px; height:100%; box-shadow:0 2px 4px rgba(7, 19, 47, 0.02); display: flex; flex-direction: column;">
-                        <div class="flyer-section-title" style="font-size:0.8rem; font-weight:850; color:#07132F; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; padding-bottom:4px; border-bottom:2px solid #F0F6FF;">
-                            📈 Skor Pengalaman
+                render_clean_html(f"""
+                <div class="flyer-card" style="background:white; border:1px solid #D7E8FF; border-radius:16px; padding:14px; height:100%; box-shadow:0 2px 4px rgba(7, 19, 47, 0.02); display: flex; flex-direction: column;">
+                    <div class="flyer-section-title" style="font-size:0.8rem; font-weight:850; color:#07132F; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; padding-bottom:4px; border-bottom:2px solid #F0F6FF;">
+                        📈 Skor Pengalaman
+                    </div>
+                    <div style="font-size:0.72rem; font-weight:750; color:#07132F; margin-bottom:10px; text-align:center;">Rata-rata Skor per Variabel</div>
+                    
+                    <!-- X1 Row -->
+                    <div style="margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:#475569; margin-bottom:3px; font-weight:600;">
+                            <span>X1 Fleksibilitas</span>
+                            <span><strong>{x1_score:.2f}</strong> / 5.00</span>
                         </div>
-                        <div style="font-size:0.72rem; font-weight:750; color:#07132F; margin-bottom:4px; text-align:center;">Rata-rata Skor per Variabel</div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                
-                # Visual 2: Skor Variabel X1, X2, M, Y
-                if survey is not None:
-                    vars_df, _ = compute_variable_scores(survey, survey_columns.get("questions", []))
-                    fig_vars = variable_score_chart(
-                        variables=vars_df,
-                        scope_label="Total data",
-                    )
-                    fig_vars.update_layout(
-                        height=140,
-                        margin=dict(t=5, b=20, l=20, r=5),
-                        title=None,
-                        xaxis={"tickfont": {"size": 8}},
-                        yaxis={"tickfont": {"size": 8}, "title": None},
-                        hovermode=False,
-                        dragmode=False,
-                        clickmode="none",
-                    )
-                    fig_vars.update_traces(
-                        hoverinfo="skip",
-                        hovertemplate=None
-                    )
-                    render_plotly_normal(fig_vars, key="flyer_variables_safe")
-                
-                st.markdown(
-                    f"""
-                        <div style="display:flex; justify-content:space-between; font-size:0.62rem; color:#64748B; margin-top:-6px; padding:0 4px; margin-bottom:8px; font-weight:600;">
-                            <span>Terkuat: <strong style="color:#10B981;">X2 Praktis (4.26)</strong></span>
-                            <span>Pantau: <strong style="color:#FF4D5E;">M Kepercayaan (3.82)</strong></span>
-                        </div>
-                        <div class="flyer-mini-stats-grid" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: auto;">
-                            <div class="flyer-mini-stat-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:6px; text-align:center;">
-                                <div class="flyer-mini-stat-val" style="font-size:1.05rem; font-weight:900; color:#10B981;">{kuat_count}</div>
-                                <div class="flyer-mini-stat-lbl" style="font-size:0.55rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">Kuat (&ge; 4.00)</div>
-                            </div>
-                            <div class="flyer-mini-stat-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:6px; text-align:center;">
-                                <div class="flyer-mini-stat-val" style="font-size:1.05rem; font-weight:900; color:#FFB020;">{cukup_count}</div>
-                                <div class="flyer-mini-stat-lbl" style="font-size:0.55rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">Cukup (3-3.99)</div>
-                            </div>
-                            <div class="flyer-mini-stat-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:6px; text-align:center;">
-                                <div class="flyer-mini-stat-val" style="font-size:1.05rem; font-weight:900; color:#FF4D5E;">{perhatian_count}</div>
-                                <div class="flyer-mini-stat-lbl" style="font-size:0.55rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">Pantau (&lt; 3.00)</div>
-                            </div>
-                            <div class="flyer-mini-stat-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:6px; text-align:center;">
-                                <div class="flyer-mini-stat-val" style="font-size:1.05rem; font-weight:900; color:#108EE9;">{r5_count}</div>
-                                <div class="flyer-mini-stat-lbl" style="font-size:0.55rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">Bintang 5 Ulasan</div>
-                            </div>
+                        <div style="display:flex; height:8px; border-radius:4px; overflow:hidden; background:#E2E8F0;">
+                            <div style="width:{x1_pct:.1f}%; background:#108EE9;"></div>
                         </div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+
+                    <!-- X2 Row -->
+                    <div style="margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:#475569; margin-bottom:3px; font-weight:600;">
+                            <span>X2 Kepraktisan</span>
+                            <span style="color:#10B981;"><strong>{x2_score:.2f}</strong> / 5.00</span>
+                        </div>
+                        <div style="display:flex; height:8px; border-radius:4px; overflow:hidden; background:#E2E8F0;">
+                            <div style="width:{x2_pct:.1f}%; background:#10B981;"></div>
+                        </div>
+                    </div>
+
+                    <!-- M Row -->
+                    <div style="margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:#475569; margin-bottom:3px; font-weight:600;">
+                            <span>M Kepercayaan</span>
+                            <span style="color:#FF4D5E;"><strong>{m_score:.2f}</strong> / 5.00</span>
+                        </div>
+                        <div style="display:flex; height:8px; border-radius:4px; overflow:hidden; background:#E2E8F0;">
+                            <div style="width:{m_pct:.1f}%; background:#FF4D5E;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Y Row -->
+                    <div style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:#475569; margin-bottom:3px; font-weight:600;">
+                            <span>Y Keseluruhan</span>
+                            <span><strong>{y_score:.2f}</strong> / 5.00</span>
+                        </div>
+                        <div style="display:flex; height:8px; border-radius:4px; overflow:hidden; background:#E2E8F0;">
+                            <div style="width:{y_pct:.1f}%; background:#2563EB;"></div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; font-size:0.62rem; color:#64748B; padding:0 4px; margin-bottom:8px; font-weight:600;">
+                        <span>Terkuat: <strong style="color:#10B981;">X2 Praktis ({x2_score:.2f})</strong></span>
+                        <span>Pantau: <strong style="color:#FF4D5E;">M Kepercayaan ({m_score:.2f})</strong></span>
+                    </div>
+                    
+                    <div class="flyer-mini-stats-grid" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: auto;">
+                        <div class="flyer-mini-stat-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:6px; text-align:center;">
+                            <div class="flyer-mini-stat-val" style="font-size:1.05rem; font-weight:900; color:#10B981;">{kuat_count}</div>
+                            <div class="flyer-mini-stat-lbl" style="font-size:0.55rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">Kuat (&ge; 4.00)</div>
+                        </div>
+                        <div class="flyer-mini-stat-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:6px; text-align:center;">
+                            <div class="flyer-mini-stat-val" style="font-size:1.05rem; font-weight:900; color:#FFB020;">{cukup_count}</div>
+                            <div class="flyer-mini-stat-lbl" style="font-size:0.55rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">Cukup (3-3.99)</div>
+                        </div>
+                        <div class="flyer-mini-stat-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:6px; text-align:center;">
+                            <div class="flyer-mini-stat-val" style="font-size:1.05rem; font-weight:900; color:#FF4D5E;">{perhatian_count}</div>
+                            <div class="flyer-mini-stat-lbl" style="font-size:0.55rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">Pantau (&lt; 3.00)</div>
+                        </div>
+                        <div class="flyer-mini-stat-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:6px; text-align:center;">
+                            <div class="flyer-mini-stat-val" style="font-size:1.05rem; font-weight:900; color:#108EE9;">{r5_count}</div>
+                            <div class="flyer-mini-stat-lbl" style="font-size:0.55rem; color:#64748B; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;">Bintang 5 Ulasan</div>
+                        </div>
+                    </div>
+                </div>
+                """)
 
             with col_3:
-                st.markdown(
-                    f"""
-                    <div class="flyer-card" style="background:white; border:1px solid #D7E8FF; border-radius:16px; padding:14px; height:100%; box-shadow:0 2px 4px rgba(7, 19, 47, 0.02); display: flex; flex-direction: column;">
-                        <div class="flyer-section-title" style="font-size:0.8rem; font-weight:850; color:#07132F; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; padding-bottom:4px; border-bottom:2px solid #F0F6FF;">
-                            💬 Sentimen &amp; Ulasan
-                        </div>
-
-                        <!-- Segmented Progress Bar -->
-                        <div style="display:flex; height:12px; border-radius:6px; overflow:hidden; margin-bottom:6px; background:#E2E8F0;">
-                            <div style="width:70.3%; background:#10B981;" title="Positif: 70.3%"></div>
-                            <div style="width:3.9%; background:#FFB020;" title="Netral: 3.9%"></div>
-                            <div style="width:25.8%; background:#EF4444;" title="Negatif: 25.8%"></div>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-size:0.58rem; color:#64748B; font-weight:700; margin-bottom:10px;">
-                            <span style="color:#10B981;">● Positif 70.3%</span>
-                            <span style="color:#FFB020;">● Netral 3.9%</span>
-                            <span style="color:#EF4444;">● Negatif 25.8%</span>
-                        </div>
-
-                        <!-- Insight Paragraph -->
-                        <div style="font-size:0.71rem; color:#475569; line-height:1.4; margin-bottom:10px;">
-                            Ulasan didominasi oleh <strong>Sentimen Positif (70.3%)</strong> yang memuji kepraktisan dan kecepatan transaksi. Namun, area perhatian utama dari ulasan negatif adalah masalah terkait <strong>akun, saldo, dan transaksi gagal</strong>.
-                        </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                
-                # Mini Review List (Max 3 ulasan, latest, truncated, sanitized)
+                # Compile reviews HTML list inside python
+                reviews_list_html = ""
                 if reviews is not None and not reviews.empty:
                     date_col = review_columns.get("date")
                     text_col = review_columns.get("review")
@@ -7941,64 +8003,79 @@ def render_snapshot_flyer(
                         s_color = "#10B981" if "positif" in s_val.lower() else ("#EF4444" if "negatif" in s_val.lower() else "#FFB020")
                         s_bg = "#ECFDF5" if "positif" in s_val.lower() else ("#FEF2F2" if "negatif" in s_val.lower() else "#FFFBEB")
                         
-                        st.markdown(
-                            f"""
-                            <div class="flyer-review-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:6px 8px; margin-bottom:6px; box-shadow:none;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                                    <span style="font-size:0.58rem; color:#64748B; font-weight:600;">{d_val}</span>
-                                    <div style="display:flex; gap:4px;">
-                                        <span style="font-size:0.55rem; font-weight:700; color:{s_color}; background:{s_bg}; padding:1px 4px; border-radius:4px; text-transform:uppercase;">{s_val}</span>
-                                        <span style="font-size:0.55rem; font-weight:700; color:#0B5ED7; background:#EAF5FF; padding:1px 4px; border-radius:4px;">★ {r_val}</span>
-                                    </div>
-                                </div>
-                                <div style="font-size:0.68rem; color:#102040; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; white-space:normal; word-break:keep-all;">
-                                    {escape(t_val)}
+                        reviews_list_html += f"""
+                        <div class="flyer-review-card" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:6px 8px; margin-bottom:6px; box-shadow:none;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                                <span style="font-size:0.58rem; color:#64748B; font-weight:600;">{d_val}</span>
+                                <div style="display:flex; gap:4px;">
+                                    <span style="font-size:0.55rem; font-weight:700; color:{s_color}; background:{s_bg}; padding:1px 4px; border-radius:4px; text-transform:uppercase;">{s_val}</span>
+                                    <span style="font-size:0.55rem; font-weight:700; color:#0B5ED7; background:#EAF5FF; padding:1px 4px; border-radius:4px;">★ {r_val}</span>
                                 </div>
                             </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
+                            <div style="font-size:0.68rem; color:#102040; line-height:1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; white-space:normal; word-break:keep-all;">
+                                {escape(t_val)}
+                            </div>
+                        </div>
+                        """
                 else:
-                    st.info("Data ulasan tidak tersedia.")
-                
-                st.markdown("</div>", unsafe_allow_html=True) # Close col_3 wrapper div
+                    reviews_list_html = "<div style='font-size:0.7rem; color:#64748B; padding:10px; text-align:center;'>Data ulasan tidak tersedia.</div>"
+
+                render_clean_html(f"""
+                <div class="flyer-card" style="background:white; border:1px solid #D7E8FF; border-radius:16px; padding:14px; height:100%; box-shadow:0 2px 4px rgba(7, 19, 47, 0.02); display: flex; flex-direction: column;">
+                    <div class="flyer-section-title" style="font-size:0.8rem; font-weight:850; color:#07132F; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; padding-bottom:4px; border-bottom:2px solid #F0F6FF;">
+                        💬 Sentimen &amp; Ulasan
+                    </div>
+
+                    <!-- Segmented Progress Bar -->
+                    <div style="display:flex; height:12px; border-radius:6px; overflow:hidden; margin-bottom:6px; background:#E2E8F0;">
+                        <div style="width:70.3%; background:#10B981;" title="Positif: 70.3%"></div>
+                        <div style="width:3.9%; background:#FFB020;" title="Netral: 3.9%"></div>
+                        <div style="width:25.8%; background:#EF4444;" title="Negatif: 25.8%"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.58rem; color:#64748B; font-weight:700; margin-bottom:10px;">
+                        <span style="color:#10B981;">● Positif 70.3%</span>
+                        <span style="color:#FFB020;">● Netral 3.9%</span>
+                        <span style="color:#EF4444;">● Negatif 25.8%</span>
+                    </div>
+
+                    <!-- Insight Paragraph -->
+                    <div style="font-size:0.71rem; color:#475569; line-height:1.4; margin-bottom:10px;">
+                        Ulasan didominasi oleh <strong>Sentimen Positif (70.3%)</strong> yang memuji kepraktisan dan kecepatan transaksi. Namun, area perhatian utama dari ulasan negatif adalah masalah terkait <strong>akun, saldo, dan transaksi gagal</strong>.
+                    </div>
+                    
+                    {reviews_list_html}
+                </div>
+                """)
             
             # Flyer Footer
-            st.markdown(
-                f"""
-                <div class="flyer-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 8px; border-top: 1px solid #F0F6FF; font-size: 0.62rem; color: #94A3B8; font-weight: 600;">
-                    <span>Dashboard: <a href="https://dashboard-dana.streamlit.app" target="_blank" style="color:#108EE9; text-decoration:none; font-weight:700;">dashboard-dana.streamlit.app</a></span>
-                    <span>GitHub: <a href="https://github.com/Sekolah76/dashboard-tugas" target="_blank" style="color:#108EE9; text-decoration:none; font-weight:700;">github.com/Sekolah76/dashboard-tugas</a></span>
-                    <span>Disclaimer: Data bersifat deskriptif &amp; identitas pengguna disembunyikan.</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            render_clean_html(f"""
+            <div class="flyer-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 8px; border-top: 1px solid #F0F6FF; font-size: 0.62rem; color: #94A3B8; font-weight: 600;">
+                <span>Dashboard: <a href="https://dashboard-dana.streamlit.app" target="_blank" style="color:#108EE9; text-decoration:none; font-weight:700;">dashboard-dana.streamlit.app</a></span>
+                <span>GitHub: <a href="https://github.com/Sekolah76/dashboard-tugas" target="_blank" style="color:#108EE9; text-decoration:none; font-weight:700;">github.com/Sekolah76/dashboard-tugas</a></span>
+                <span>Disclaimer: Data bersifat deskriptif &amp; identitas pengguna disembunyikan.</span>
+            </div>
+            """)
 
     # Mobile View (notice and clean simplified stats, no overflow)
     with st.container(key="snapshot_flyer_mobile"):
         st.info("📱 Gunakan laptop/desktop untuk screenshot flyer terbaik.")
         
-        st.markdown('<div style="font-weight:800;color:#07132F;font-size:0.9rem;margin-bottom:8px;">Ringkasan KPI Utama</div>', unsafe_allow_html=True)
+        render_clean_html('<div style="font-weight:800;color:#07132F;font-size:0.9rem;margin-bottom:8px;">Ringkasan KPI Utama</div>')
         mobile_kpis = [
-            ("Responden Survei", f"{survey_count} Orang"),
-            ("Ulasan Pengguna", f"{review_count} Ulasan"),
-            ("Rata-rata Skor", f"{avg_skor:.2f} / 5.00"),
-            ("Rata-rata Rating", f"{avg_rating:.2f} / 5.00"),
+            ("Responden", f"{survey_count} Orang"),
+            ("Ulasan", f"{review_count} Ulasan"),
+            ("Skor Kuesioner", f"{avg_skor:.2f} / 5.00"),
+            ("Rating Ulasan", f"{avg_rating:.2f} / 5.00"),
             ("Sentimen Positif", f"{positive_pct:.1f}%"),
         ]
         
         for label, val in mobile_kpis:
-            st.markdown(
-                f"""
-                <div style="display:flex;justify-content:space-between;align-items:center;background:white;border:1px solid #D7E8FF;border-radius:8px;padding:8px 12px;margin-bottom:6px;width:100%; box-sizing:border-box;">
-                    <span style="font-size:0.75rem;color:#5C6B86;font-weight:600;">{label}</span>
-                    <span style="font-size:0.8rem;color:#108EE9;font-weight:800;margin-left:auto;font-variant-numeric:tabular-nums;">{val}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
+            render_clean_html(f"""
+            <div style="display:flex;justify-content:space-between;align-items:center;background:white;border:1px solid #D7E8FF;border-radius:8px;padding:8px 12px;margin-bottom:6px;width:100%; box-sizing:border-box;">
+                <span style="font-size:0.75rem;color:#5C6B86;font-weight:600;">{label}</span>
+                <span style="font-size:0.8rem;color:#108EE9;font-weight:800;margin-left:auto;font-variant-numeric:tabular-nums;">{val}</span>
+            </div>
+            """)
 
 def render_footer() -> None:
     st.html(
